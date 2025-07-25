@@ -315,7 +315,9 @@ const JokeApp: React.FC = () => {
             <Button
               variant={mode === 'auto' ? 'default' : 'outline'}
               onClick={() => setMode('auto')}
-              className="h-auto p-4 flex flex-col gap-2"
+              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                mode === 'auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+              }`}
             >
               <Volume2 className="h-8 w-8" />
               <div className="text-center">
@@ -329,7 +331,9 @@ const JokeApp: React.FC = () => {
             <Button
               variant={mode === 'semi-auto' ? 'default' : 'outline'}
               onClick={() => setMode('semi-auto')}
-              className="h-auto p-4 flex flex-col gap-2"
+              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                mode === 'semi-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+              }`}
             >
               <div className="flex items-center gap-1">
                 <Mic className="h-6 w-6" />
@@ -346,7 +350,9 @@ const JokeApp: React.FC = () => {
             <Button
               variant={mode === 'manual' ? 'default' : 'outline'}
               onClick={() => setMode('manual')}
-              className="h-auto p-4 flex flex-col gap-2"
+              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                mode === 'manual' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+              }`}
             >
               <div className="flex items-center gap-1">
                 <Mic className="h-6 w-6" />
