@@ -41,6 +41,8 @@ const JokeApp: React.FC = () => {
     ageGroup: 'adult'
   });
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [photosThisJoke, setPhotosThisJoke] = useState(0);
+  const [maxPhotosPerJoke] = useState(5);
   
   // Voice options for American accents
   const voiceOptions: VoiceOption[] = [
@@ -286,6 +288,16 @@ const JokeApp: React.FC = () => {
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
+    // Check photo limit for current joke
+    if (photosThisJoke >= maxPhotosPerJoke) {
+      toast.error(`Maximum ${maxPhotosPerJoke} photos per joke reached! Get a new joke to continue.`);
+      setIsDetectingSmile(false);
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+      }
+      return;
+    }
+
     const canvas = canvasRef.current;
     const video = videoRef.current;
     const context = canvas.getContext('2d');
@@ -305,6 +317,7 @@ const JokeApp: React.FC = () => {
       };
 
       setCapturedPhotos(prev => [newPhoto, ...prev]);
+      setPhotosThisJoke(prev => prev + 1);
       
       // Create flash effect
       if (videoRef.current) {
@@ -315,13 +328,26 @@ const JokeApp: React.FC = () => {
           }
         }, 150);
       }
+
+      // Show photo count update
+      const remaining = maxPhotosPerJoke - (photosThisJoke + 1);
+      if (remaining > 0) {
+        toast.success(`📸 Photo captured! ${remaining} more allowed for this joke.`);
+      } else {
+        toast.success(`📸 Final photo captured! Get a new joke for more photos.`);
+        setIsDetectingSmile(false);
+        if (detectionIntervalRef.current) {
+          clearInterval(detectionIntervalRef.current);
+        }
+      }
     }
-  }, [currentJoke, mode]);
+  }, [currentJoke, mode, photosThisJoke, maxPhotosPerJoke]);
 
   // Get a new random joke
   const getNewJoke = useCallback(() => {
     const joke = getRandomJoke();
     setCurrentJoke(joke);
+    setPhotosThisJoke(0); // Reset photo counter for new joke
     return joke;
   }, []);
 
@@ -549,11 +575,11 @@ const JokeApp: React.FC = () => {
                     </Button>
                     <Button 
                       onClick={capturePhoto}
-                      disabled={!cameraActive}
+                      disabled={!cameraActive || photosThisJoke >= maxPhotosPerJoke}
                       variant="outline"
                     >
                       <Camera className="h-4 w-4 mr-2" />
-                      Take Photo
+                      Take Photo {photosThisJoke > 0 && `(${photosThisJoke}/${maxPhotosPerJoke})`}
                     </Button>
                   </>
                 )}
