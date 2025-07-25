@@ -37,16 +37,19 @@ const JokeApp: React.FC = () => {
   useEffect(() => {
     const loadModels = async () => {
       try {
+        // Try to load models from CDN instead of local files
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceExpressionNet.loadFromUri('/models')
+          faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model'),
+          faceapi.nets.faceExpressionNet.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model')
         ]);
         setIsModelLoaded(true);
         toast.success('Face detection models loaded!');
       } catch (error) {
         console.error('Error loading models:', error);
-        toast.error('Failed to load face detection models. Some features may not work.');
+        toast.error('Face detection not available. Manual photo mode still works!');
+        // Don't block the app if models fail to load
+        setIsModelLoaded(false);
       }
     };
 
