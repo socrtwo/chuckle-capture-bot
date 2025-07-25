@@ -68,6 +68,29 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			colors: {
+				joy: {
+					DEFAULT: 'hsl(var(--joy))',
+					foreground: 'hsl(var(--joy-foreground))'
+				},
+				laugh: {
+					DEFAULT: 'hsl(var(--laugh))',
+					foreground: 'hsl(var(--laugh-foreground))'
+				},
+				smile: {
+					DEFAULT: 'hsl(var(--smile))',
+					foreground: 'hsl(var(--smile-foreground))'
+				},
+				camera: {
+					DEFAULT: 'hsl(var(--camera))',
+					foreground: 'hsl(var(--camera-foreground))'
+				}
+			},
+			backgroundImage: {
+				'gradient-fun': 'var(--gradient-fun)',
+				'gradient-camera': 'var(--gradient-camera)',
+				'gradient-background': 'var(--gradient-background)'
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -84,11 +107,41 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'bounce-soft': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 20px hsl(var(--primary) / 0.3)'
+					},
+					'50%': {
+						boxShadow: '0 0 40px hsl(var(--primary) / 0.6)'
+					}
+				},
+				'camera-flash': {
+					'0%': {
+						backgroundColor: 'transparent'
+					},
+					'10%': {
+						backgroundColor: 'hsl(0 0% 100% / 0.8)'
+					},
+					'100%': {
+						backgroundColor: 'transparent'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce-soft': 'bounce-soft 2s ease-in-out infinite',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'camera-flash': 'camera-flash 0.3s ease-out'
 			}
 		}
 	},
