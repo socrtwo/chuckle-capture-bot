@@ -181,109 +181,6 @@ const JokeApp: React.FC = () => {
     }
   }, []);
 
-  // Speak joke using Web Speech API
-  const speakJoke = useCallback((joke: string) => {
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      speechSynthesis.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(joke);
-      
-      // Voice-specific settings
-      const voice = findBestVoice(selectedVoice);
-      if (voice) {
-        utterance.voice = voice;
-      }
-      
-      // Adjust speech parameters based on age group
-      switch (selectedVoice.ageGroup) {
-        case 'child':
-          utterance.rate = 1.1;
-          utterance.pitch = 1.4;
-          break;
-        case 'adult':
-          utterance.rate = 0.9;
-          utterance.pitch = 1.0;
-          break;
-        case 'old':
-          utterance.rate = 0.7;
-          utterance.pitch = 0.8;
-          break;
-      }
-      
-      utterance.volume = 0.8;
-
-      utterance.onstart = () => {
-        toast.info(`🎭 ${selectedVoice.name} telling joke...`);
-      };
-      
-      utterance.onend = () => {
-        if (mode === 'auto' || mode === 'semi-auto') {
-          startSmileDetection();
-        }
-      };
-
-      speechSynthRef.current = utterance;
-      speechSynthesis.speak(utterance);
-    } else {
-      toast.error('Speech synthesis not supported in this browser');
-      if (mode === 'auto' || mode === 'semi-auto') {
-        startSmileDetection();
-      }
-    }
-  }, [mode, selectedVoice, findBestVoice]);
-
-  // Detect smiles in video feed
-  const detectSmile = useCallback(async () => {
-    if (!videoRef.current || !isModelLoaded || !cameraActive) return;
-
-    try {
-      const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions();
-
-      if (detections.length > 0) {
-        const expressions = detections[0].expressions;
-        const happiness = expressions.happy;
-        
-        // Trigger photo if happiness level is above threshold
-        if (happiness > 0.6) {
-          capturePhoto();
-          setIsDetectingSmile(false);
-          if (detectionIntervalRef.current) {
-            clearInterval(detectionIntervalRef.current);
-          }
-          toast.success('😊 Smile detected! Photo captured!');
-        }
-      }
-    } catch (error) {
-      console.error('Error detecting faces:', error);
-    }
-  }, [isModelLoaded, cameraActive]);
-
-  // Start smile detection
-  const startSmileDetection = useCallback(() => {
-    if (!isModelLoaded || !cameraActive) {
-      toast.error('Camera or face detection not ready');
-      return;
-    }
-
-    setIsDetectingSmile(true);
-    toast.info('😊 Watching for smiles...');
-    
-    detectionIntervalRef.current = setInterval(detectSmile, 100);
-    
-    // Auto-stop detection after 30 seconds
-    setTimeout(() => {
-      if (detectionIntervalRef.current) {
-        clearInterval(detectionIntervalRef.current);
-        setIsDetectingSmile(false);
-        toast.info('Smile detection stopped');
-      }
-    }, 30000);
-  }, [detectSmile, isModelLoaded, cameraActive]);
-
   // Capture photo from video feed
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -342,6 +239,154 @@ const JokeApp: React.FC = () => {
       }
     }
   }, [currentJoke, mode, photosThisJoke, maxPhotosPerJoke]);
+
+  // Detect smiles in video feed
+  const detectSmile = useCallback(async () => {
+    if (!videoRef.current || !isModelLoaded || !cameraActive) return;
+
+    try {
+      const detections = await faceapi
+        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions();
+
+      if (detections.length > 0) {
+        const expressions = detections[0].expressions;
+        const happiness = expressions.happy;
+        
+        // Trigger photo if happiness level is above threshold
+        if (happiness > 0.6) {
+          capturePhoto();
+          setIsDetectingSmile(false);
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+          }
+          toast.success('😊 Smile detected! Photo captured!');
+        }
+      }
+    } catch (error) {
+      console.error('Error detecting faces:', error);
+    }
+  }, [isModelLoaded, cameraActive, capturePhoto]);
+
+  // Start smile detection
+  const startSmileDetection = useCallback(() => {
+    if (!isModelLoaded || !cameraActive) {
+      toast.error('Camera or face detection not ready');
+      return;
+    }
+
+    setIsDetectingSmile(true);
+    toast.info('😊 Watching for smiles...');
+    
+    detectionIntervalRef.current = setInterval(detectSmile, 100);
+    
+    // Auto-stop detection after 30 seconds
+    setTimeout(() => {
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+        setIsDetectingSmile(false);
+        toast.info('Smile detection stopped');
+      }
+    }, 30000);
+  }, [detectSmile, isModelLoaded, cameraActive]);
+
+  // Speak joke using Web Speech API with pause between setup and punchline
+  const speakJoke = useCallback((joke: string) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      speechSynthesis.cancel();
+      
+      // Split joke into setup and punchline (assuming they're separated by a question mark or period)
+      const parts = joke.split(/[.!?](?=\s)/);
+      const setup = parts[0] + (joke.includes('?') ? '?' : '.');
+      const punchline = parts.slice(1).join('').trim();
+      
+      // Speak setup first
+      const setupUtterance = new SpeechSynthesisUtterance(setup);
+      
+      // Voice-specific settings
+      const voice = findBestVoice(selectedVoice);
+      if (voice) {
+        setupUtterance.voice = voice;
+      }
+      
+      // Adjust speech parameters based on age group
+      switch (selectedVoice.ageGroup) {
+        case 'child':
+          setupUtterance.rate = 1.1;
+          setupUtterance.pitch = 1.4;
+          break;
+        case 'adult':
+          setupUtterance.rate = 0.9;
+          setupUtterance.pitch = 1.0;
+          break;
+        case 'old':
+          setupUtterance.rate = 0.7;
+          setupUtterance.pitch = 0.8;
+          break;
+      }
+      
+      setupUtterance.volume = 0.8;
+
+      setupUtterance.onstart = () => {
+        toast.info(`🎭 ${selectedVoice.name} telling joke...`);
+      };
+      
+      setupUtterance.onend = () => {
+        // Add a 1.5 second pause before punchline
+        setTimeout(() => {
+          if (punchline) {
+            const punchlineUtterance = new SpeechSynthesisUtterance(punchline);
+            
+            // Same voice settings for punchline
+            if (voice) {
+              punchlineUtterance.voice = voice;
+            }
+            
+            switch (selectedVoice.ageGroup) {
+              case 'child':
+                punchlineUtterance.rate = 1.1;
+                punchlineUtterance.pitch = 1.4;
+                break;
+              case 'adult':
+                punchlineUtterance.rate = 0.9;
+                punchlineUtterance.pitch = 1.0;
+                break;
+              case 'old':
+                punchlineUtterance.rate = 0.7;
+                punchlineUtterance.pitch = 0.8;
+                break;
+            }
+            
+            punchlineUtterance.volume = 0.8;
+            
+            punchlineUtterance.onend = () => {
+              if (mode === 'auto' || mode === 'semi-auto') {
+                startSmileDetection();
+              }
+            };
+
+            speechSynthRef.current = punchlineUtterance;
+            speechSynthesis.speak(punchlineUtterance);
+          } else {
+            // If no punchline, start smile detection immediately
+            if (mode === 'auto' || mode === 'semi-auto') {
+              startSmileDetection();
+            }
+          }
+        }, 1500); // 1.5 second pause
+      };
+
+      speechSynthRef.current = setupUtterance;
+      speechSynthesis.speak(setupUtterance);
+    } else {
+      toast.error('Speech synthesis not supported in this browser');
+      if (mode === 'auto' || mode === 'semi-auto') {
+        startSmileDetection();
+      }
+    }
+  }, [mode, selectedVoice, findBestVoice, startSmileDetection]);
 
   // Get a new random joke
   const getNewJoke = useCallback(() => {

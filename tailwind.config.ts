@@ -84,12 +84,24 @@ export default {
 				camera: {
 					DEFAULT: 'hsl(var(--camera))',
 					foreground: 'hsl(var(--camera-foreground))'
+				},
+				premium: {
+					DEFAULT: 'hsl(var(--premium))',
+					foreground: 'hsl(var(--premium-foreground))'
 				}
 			},
 			backgroundImage: {
 				'gradient-fun': 'var(--gradient-fun)',
 				'gradient-camera': 'var(--gradient-camera)',
-				'gradient-background': 'var(--gradient-background)'
+				'gradient-background': 'var(--gradient-background)',
+				'gradient-premium': 'var(--gradient-premium)',
+				'gradient-subtle': 'var(--gradient-subtle)'
+			},
+			boxShadow: {
+				'subtle': 'var(--shadow-subtle)',
+				'medium': 'var(--shadow-medium)',
+				'large': 'var(--shadow-large)',
+				'glow': 'var(--shadow-glow)'
 			},
 			keyframes: {
 				'accordion-down': {
