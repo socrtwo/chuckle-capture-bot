@@ -8,6 +8,14 @@ import { getRandomJoke } from '@/data/jokes';
 import { toast } from 'sonner';
 import * as faceapi from '@vladmandic/face-api';
 
+interface VoiceOption {
+  id: string;
+  name: string;
+  gender: 'male' | 'female';
+  ageGroup: 'child' | 'adult' | 'old';
+  voiceName?: string;
+}
+
 interface CapturedPhoto {
   id: string;
   dataUrl: string;
@@ -26,6 +34,23 @@ const JokeApp: React.FC = () => {
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isDetectingSmile, setIsDetectingSmile] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<VoiceOption>({
+    id: 'female-adult',
+    name: 'Female Adult',
+    gender: 'female',
+    ageGroup: 'adult'
+  });
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  
+  // Voice options for American accents
+  const voiceOptions: VoiceOption[] = [
+    { id: 'female-child', name: 'Female Child', gender: 'female', ageGroup: 'child' },
+    { id: 'female-adult', name: 'Female Adult', gender: 'female', ageGroup: 'adult' },
+    { id: 'female-old', name: 'Female Elder', gender: 'female', ageGroup: 'old' },
+    { id: 'male-child', name: 'Male Child', gender: 'male', ageGroup: 'child' },
+    { id: 'male-adult', name: 'Male Adult', gender: 'male', ageGroup: 'adult' },
+    { id: 'male-old', name: 'Male Elder', gender: 'male', ageGroup: 'old' },
+  ];
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,6 +80,68 @@ const JokeApp: React.FC = () => {
 
     loadModels();
   }, []);
+
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      setAvailableVoices(voices);
+    };
+
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+  // Find best matching voice for selected option
+  const findBestVoice = useCallback((voiceOption: VoiceOption): SpeechSynthesisVoice | null => {
+    if (availableVoices.length === 0) return null;
+
+    // American English voices preferences
+    const americanVoices = availableVoices.filter(voice => 
+      voice.lang.includes('en-US') || voice.lang.includes('en')
+    );
+
+    // Voice matching logic based on gender and age
+    let candidates = americanVoices.filter(voice => {
+      const name = voice.name.toLowerCase();
+      
+      if (voiceOption.gender === 'female') {
+        return name.includes('female') || 
+               name.includes('woman') || 
+               name.includes('karen') || 
+               name.includes('samantha') || 
+               name.includes('susan') || 
+               name.includes('sarah') ||
+               name.includes('alex') ||
+               name.includes('allison');
+      } else {
+        return name.includes('male') || 
+               name.includes('man') || 
+               name.includes('daniel') || 
+               name.includes('david') || 
+               name.includes('tom') ||
+               name.includes('fred') ||
+               name.includes('aaron');
+      }
+    });
+
+    // If no gender-specific voices found, use any American voice
+    if (candidates.length === 0) {
+      candidates = americanVoices;
+    }
+
+    // Age-specific adjustments (this is approximate since most voices don't specify age)
+    if (voiceOption.ageGroup === 'child') {
+      // Look for higher pitched or voices that might sound younger
+      const childVoices = candidates.filter(voice => 
+        voice.name.toLowerCase().includes('child') ||
+        voice.name.toLowerCase().includes('young')
+      );
+      if (childVoices.length > 0) candidates = childVoices;
+    }
+
+    return candidates[0] || americanVoices[0] || availableVoices[0];
+  }, [availableVoices]);
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -99,25 +186,33 @@ const JokeApp: React.FC = () => {
       speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(joke);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.1;
-      utterance.volume = 0.8;
       
-      // Get available voices and prefer a cheerful one
-      const voices = speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice => 
-        voice.name.includes('Google') || 
-        voice.name.includes('Female') ||
-        voice.name.includes('Daniel') ||
-        voice.name.includes('Karen')
-      );
-      
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
+      // Voice-specific settings
+      const voice = findBestVoice(selectedVoice);
+      if (voice) {
+        utterance.voice = voice;
       }
+      
+      // Adjust speech parameters based on age group
+      switch (selectedVoice.ageGroup) {
+        case 'child':
+          utterance.rate = 1.1;
+          utterance.pitch = 1.4;
+          break;
+        case 'adult':
+          utterance.rate = 0.9;
+          utterance.pitch = 1.0;
+          break;
+        case 'old':
+          utterance.rate = 0.7;
+          utterance.pitch = 0.8;
+          break;
+      }
+      
+      utterance.volume = 0.8;
 
       utterance.onstart = () => {
-        toast.info('🎭 Telling joke...');
+        toast.info(`🎭 ${selectedVoice.name} telling joke...`);
       };
       
       utterance.onend = () => {
@@ -134,7 +229,7 @@ const JokeApp: React.FC = () => {
         startSmileDetection();
       }
     }
-  }, [mode]);
+  }, [mode, selectedVoice, findBestVoice]);
 
   // Detect smiles in video feed
   const detectSmile = useCallback(async () => {
@@ -485,6 +580,33 @@ const JokeApp: React.FC = () => {
             </h2>
             
             <div className="space-y-4">
+              {/* Voice Selection */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Volume2 className="h-4 w-4" />
+                  Narrator Voice
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {voiceOptions.map((voice) => (
+                    <Button
+                      key={voice.id}
+                      variant={selectedVoice.id === voice.id ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedVoice(voice)}
+                      className={`text-xs h-8 ${
+                        selectedVoice.id === voice.id 
+                          ? 'bg-gradient-fun text-white' 
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      {voice.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <Separator />
+              
               <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
                 {currentJoke ? (
                   <p className="text-lg leading-relaxed">{currentJoke}</p>
@@ -501,7 +623,7 @@ const JokeApp: React.FC = () => {
                   className="w-full bg-gradient-fun"
                 >
                   <Volume2 className="h-4 w-4 mr-2" />
-                  Speak Joke
+                  {selectedVoice.name} Tells Joke
                 </Button>
               )}
             </div>
