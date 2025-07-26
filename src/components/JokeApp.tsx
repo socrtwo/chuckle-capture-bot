@@ -494,6 +494,12 @@ const JokeApp: React.FC = () => {
             const joke = getNewJoke();
             console.log('First joke in fully auto mode:', joke);
             speakJoke(joke);
+            
+            // Start smile detection immediately for fully auto mode
+            console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', true);
+            if (isModelLoaded) {
+              startSmileDetection();
+            }
           }, 1000);
           return;
         }
@@ -772,21 +778,21 @@ const JokeApp: React.FC = () => {
                       Settings
                     </Button>
                   </DialogTrigger>
-                   <DialogContent className="max-w-md bg-card text-card-foreground border-border">
+                   <DialogContent className="max-w-md bg-background text-foreground border">
                      <DialogHeader>
-                       <DialogTitle className="text-card-foreground">Settings</DialogTitle>
+                       <DialogTitle className="text-foreground">Settings</DialogTitle>
                      </DialogHeader>
                     <div className="space-y-6">
                        {/* Voice Type Selection */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-card-foreground">Voice Type</label>
+                         <label className="text-sm font-medium mb-2 block text-foreground">Voice Type</label>
                         <div className="grid grid-cols-1 gap-2">
                           {voiceTypes.map((voiceType) => (
                             <Button
                               key={voiceType.id}
                               variant={selectedVoiceType === voiceType.id ? 'default' : 'outline'}
                               onClick={() => setSelectedVoiceType(voiceType.id)}
-                              className="justify-start"
+                              className="justify-start text-foreground"
                               size="sm"
                             >
                               {voiceType.name}
@@ -797,7 +803,7 @@ const JokeApp: React.FC = () => {
 
                        {/* Joke Count for Fully Auto */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-card-foreground">Number of Jokes (Fully Auto)</label>
+                         <label className="text-sm font-medium mb-2 block text-foreground">Number of Jokes (Fully Auto)</label>
                         <div className="flex items-center gap-2">
                           <input 
                             type="number" 
@@ -806,7 +812,7 @@ const JokeApp: React.FC = () => {
                             value={fullyAutoJokeCount}
                             onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
                             disabled={isRunningFullyAuto}
-                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-card text-card-foreground border-border"
+                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-background text-foreground border-border focus:ring-2 focus:ring-primary"
                           />
                           <span className="text-sm text-muted-foreground">jokes</span>
                         </div>
@@ -814,14 +820,14 @@ const JokeApp: React.FC = () => {
 
                        {/* Import/Export Jokes */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-card-foreground">Manage Jokes</label>
+                         <label className="text-sm font-medium mb-2 block text-foreground">Manage Jokes</label>
                         <div className="flex gap-2">
-                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1">
+                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 text-foreground">
                             <FileDown className="h-4 w-4 mr-2" />
                             Export
                           </Button>
                           <label className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full" asChild>
+                            <Button variant="outline" size="sm" className="w-full text-foreground" asChild>
                               <span>
                                 <Upload className="h-4 w-4 mr-2" />
                                 Import
