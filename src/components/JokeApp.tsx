@@ -43,6 +43,8 @@ const JokeApp: React.FC = () => {
   const [currentFullyAutoJoke, setCurrentFullyAutoJoke] = useState(0);
   const [selectedVoiceType, setSelectedVoiceType] = useState<string>('adult-man');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [maxPhotosPerSmileDetection, setMaxPhotosPerSmileDetection] = useState(5);
+  const [timeBetweenAutoPhotos, setTimeBetweenAutoPhotos] = useState(0.5);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -160,9 +162,9 @@ const JokeApp: React.FC = () => {
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
-    // Check photo limit for current joke (5 photos max)
-    if (photosThisJoke >= 5) {
-      toast.error(`Maximum 5 photos per joke reached! Get a new joke to continue.`);
+    // Check photo limit for current joke (user configurable max)
+    if (photosThisJoke >= maxPhotosPerSmileDetection) {
+      toast.error(`Maximum ${maxPhotosPerSmileDetection} photos per joke reached! Get a new joke to continue.`);
       setIsDetectingSmile(false);
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
@@ -202,7 +204,7 @@ const JokeApp: React.FC = () => {
       }
 
       // Show photo count update
-      const remaining = 5 - (photosThisJoke + 1);
+      const remaining = maxPhotosPerSmileDetection - (photosThisJoke + 1);
       if (remaining > 0) {
         toast.success(`📸 Photo captured! ${remaining} more allowed for this joke.`);
       } else {
@@ -260,7 +262,7 @@ const JokeApp: React.FC = () => {
             // Brief pause to avoid rapid consecutive photos of the same smile
             setTimeout(() => {
               console.log('Resuming smile detection after brief pause');
-            }, 2000);
+            }, timeBetweenAutoPhotos * 1000);
           }
         }
       } else {
@@ -835,22 +837,55 @@ const JokeApp: React.FC = () => {
                         </div>
                       </div>
 
-                       {/* Joke Count for Fully Auto */}
+                        {/* Joke Count for Fully Auto */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block text-black">Number of Jokes (Fully Auto)</label>
+                         <div className="flex items-center gap-2">
+                           <input 
+                             type="number" 
+                             min="1" 
+                             max="20" 
+                             value={fullyAutoJokeCount}
+                             onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
+                             disabled={isRunningFullyAuto}
+                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                           <span className="text-sm text-gray-600">jokes</span>
+                         </div>
+                       </div>
+
+                       {/* Max Photos Per Smile Detection */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-black">Number of Jokes (Fully Auto)</label>
-                        <div className="flex items-center gap-2">
-                          <input 
-                            type="number" 
-                            min="1" 
-                            max="20" 
-                            value={fullyAutoJokeCount}
-                            onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
-                            disabled={isRunningFullyAuto}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <span className="text-sm text-gray-600">jokes</span>
-                        </div>
-                      </div>
+                         <label className="text-sm font-medium mb-2 block text-black">Max Photos per Smile Detection</label>
+                         <div className="flex items-center gap-2">
+                           <input 
+                             type="number" 
+                             min="1" 
+                             max="20" 
+                             value={maxPhotosPerSmileDetection}
+                             onChange={(e) => setMaxPhotosPerSmileDetection(Number(e.target.value))}
+                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                           <span className="text-sm text-gray-600">photos</span>
+                         </div>
+                       </div>
+
+                       {/* Time Between Auto Photos */}
+                       <div>
+                         <label className="text-sm font-medium mb-2 block text-black">Time Between Auto Photos</label>
+                         <div className="flex items-center gap-2">
+                           <input 
+                             type="number" 
+                             min="0.1" 
+                             max="10" 
+                             step="0.1"
+                             value={timeBetweenAutoPhotos}
+                             onChange={(e) => setTimeBetweenAutoPhotos(Number(e.target.value))}
+                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                           <span className="text-sm text-gray-600">seconds</span>
+                         </div>
+                       </div>
 
                        {/* Import/Export Jokes */}
                        <div>
@@ -983,7 +1018,7 @@ const JokeApp: React.FC = () => {
             <Card className="p-6 flex-1">
               <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
                 {currentJoke ? (
-                  <p className="text-lg leading-relaxed">{currentJoke}</p>
+                  <p className="text-lg leading-relaxed whitespace-pre-wrap break-words">{currentJoke}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
                     Click "Get Joke" to load a joke
