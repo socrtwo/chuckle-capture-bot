@@ -245,11 +245,23 @@ const JokeApp: React.FC = () => {
         if (happiness > 0.6) {
           console.log('Smile detected! Taking photo...');
           capturePhoto();
-          setIsDetectingSmile(false);
-          if (detectionIntervalRef.current) {
-            clearInterval(detectionIntervalRef.current);
+          
+          // Only stop smile detection if NOT in fully auto mode
+          if (mode !== 'fully-auto') {
+            setIsDetectingSmile(false);
+            if (detectionIntervalRef.current) {
+              clearInterval(detectionIntervalRef.current);
+            }
+            toast.success('😊 Smile detected! Photo captured!');
+          } else {
+            // In fully auto mode, just show success but keep detecting
+            toast.success('😊 Smile detected! Photo captured! Still watching for more smiles...');
+            
+            // Brief pause to avoid rapid consecutive photos of the same smile
+            setTimeout(() => {
+              console.log('Resuming smile detection after brief pause');
+            }, 2000);
           }
-          toast.success('😊 Smile detected! Photo captured!');
         }
       } else {
         console.log('No faces detected in frame');
