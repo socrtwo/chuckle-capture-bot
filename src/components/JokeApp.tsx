@@ -47,6 +47,7 @@ const JokeApp: React.FC = () => {
   const [timeBetweenAutoPhotos, setTimeBetweenAutoPhotos] = useState(0.5);
   const [totalJokesCount, setTotalJokesCount] = useState(0);
   const [importMode, setImportMode] = useState<'replace' | 'add'>('replace');
+  const [recentJokes, setRecentJokes] = useState<string[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -333,13 +334,29 @@ const JokeApp: React.FC = () => {
     }
   }, [detectSmile, isModelLoaded, cameraActive, mode]);
 
-  // Get a new random joke (also triggers auto mode if refresh is clicked)
+  // Get a new random joke with improved randomization to avoid repetition
   const getNewJoke = useCallback(() => {
-    const joke = getRandomJoke();
+    let joke = getRandomJoke();
+    let attempts = 0;
+    const maxAttempts = 10; // Prevent infinite loops
+    
+    // Try to avoid recently used jokes if we have enough jokes available
+    while (recentJokes.includes(joke) && attempts < maxAttempts) {
+      joke = getRandomJoke();
+      attempts++;
+    }
+    
+    // Update recent jokes list (keep last 20 jokes)
+    setRecentJokes(prev => {
+      const updated = [joke, ...prev.slice(0, 19)];
+      return updated;
+    });
+    
     setCurrentJoke(joke);
     setPhotosThisJoke(0); // Reset photo counter for new joke
+    console.log('Selected joke:', joke, 'Attempts to avoid repetition:', attempts);
     return joke;
-  }, []);
+  }, [recentJokes]);
 
   // Stop speech
   const stopSpeech = useCallback(() => {
