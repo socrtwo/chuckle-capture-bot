@@ -814,28 +814,30 @@ const JokeApp: React.FC = () => {
                       Settings
                     </Button>
                   </DialogTrigger>
-                   <DialogContent className="max-w-md bg-white text-black border">
+                   <DialogContent className="max-w-4xl bg-white text-black border">
                      <DialogHeader>
                        <DialogTitle className="text-black font-semibold">Settings</DialogTitle>
                      </DialogHeader>
-                    <div className="space-y-6">
-                       {/* Voice Type Selection */}
-                       <div>
-                         <label className="text-sm font-medium mb-2 block text-black">Voice Type</label>
-                        <div className="grid grid-cols-1 gap-2">
-                          {voiceTypes.map((voiceType) => (
-                            <Button
-                              key={voiceType.id}
-                              variant={selectedVoiceType === voiceType.id ? 'default' : 'outline'}
-                              onClick={() => setSelectedVoiceType(voiceType.id)}
-                              className={`justify-start ${selectedVoiceType === voiceType.id ? 'bg-blue-600 text-white' : 'bg-white text-black border-gray-300 hover:bg-gray-50'}`}
-                              size="sm"
-                            >
-                              {voiceType.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
+                    <div className="grid grid-cols-2 gap-8">
+                       {/* Left Column */}
+                       <div className="space-y-6">
+                        {/* Voice Type Selection */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block text-black">Voice Type</label>
+                         <div className="grid grid-cols-1 gap-2">
+                           {voiceTypes.map((voiceType) => (
+                             <Button
+                               key={voiceType.id}
+                               variant={selectedVoiceType === voiceType.id ? 'default' : 'outline'}
+                               onClick={() => setSelectedVoiceType(voiceType.id)}
+                               className={`justify-start ${selectedVoiceType === voiceType.id ? 'bg-blue-600 text-white' : 'bg-white text-black border-gray-300 hover:bg-gray-50'}`}
+                               size="sm"
+                             >
+                               {voiceType.name}
+                             </Button>
+                           ))}
+                         </div>
+                       </div>
 
                         {/* Joke Count for Fully Auto */}
                         <div>
@@ -853,7 +855,10 @@ const JokeApp: React.FC = () => {
                            <span className="text-sm text-gray-600">jokes</span>
                          </div>
                        </div>
+                       </div>
 
+                       {/* Right Column */}
+                       <div className="space-y-6">
                        {/* Max Photos Per Smile Detection */}
                        <div>
                          <label className="text-sm font-medium mb-2 block text-black">Max Photos per Smile Detection</label>
@@ -887,33 +892,34 @@ const JokeApp: React.FC = () => {
                          </div>
                        </div>
 
-                       {/* Import/Export Jokes */}
-                       <div>
-                         <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
-                        <div className="flex gap-2">
-                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
-                            <FileDown className="h-4 w-4 mr-2" />
-                            Export
-                          </Button>
-                          <label className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50" asChild>
-                              <span>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Import
-                              </span>
-                            </Button>
-                            <input
-                              type="file"
-                              accept=".json"
-                              onChange={importJokes}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Export current jokes or import new ones (JSON format)
-                        </p>
-                      </div>
+                        {/* Import/Export Jokes */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
+                         <div className="flex gap-2">
+                           <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
+                             <FileDown className="h-4 w-4 mr-2" />
+                             Export
+                           </Button>
+                           <label className="flex-1">
+                             <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50" asChild>
+                               <span>
+                                 <Upload className="h-4 w-4 mr-2" />
+                                 Import
+                               </span>
+                             </Button>
+                             <input
+                               type="file"
+                               accept=".json"
+                               onChange={importJokes}
+                               className="hidden"
+                             />
+                           </label>
+                         </div>
+                         <p className="text-xs text-gray-600 mt-1">
+                           Export current jokes or import new ones (JSON format)
+                         </p>
+                       </div>
+                       </div>
                     </div>
                   </DialogContent>
                 </Dialog>
