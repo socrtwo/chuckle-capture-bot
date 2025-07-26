@@ -778,21 +778,21 @@ const JokeApp: React.FC = () => {
                       Settings
                     </Button>
                   </DialogTrigger>
-                   <DialogContent className="max-w-md bg-background text-foreground border">
+                   <DialogContent className="max-w-md bg-white text-black border">
                      <DialogHeader>
-                       <DialogTitle className="text-foreground">Settings</DialogTitle>
+                       <DialogTitle className="text-black font-semibold">Settings</DialogTitle>
                      </DialogHeader>
                     <div className="space-y-6">
                        {/* Voice Type Selection */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-foreground">Voice Type</label>
+                         <label className="text-sm font-medium mb-2 block text-black">Voice Type</label>
                         <div className="grid grid-cols-1 gap-2">
                           {voiceTypes.map((voiceType) => (
                             <Button
                               key={voiceType.id}
                               variant={selectedVoiceType === voiceType.id ? 'default' : 'outline'}
                               onClick={() => setSelectedVoiceType(voiceType.id)}
-                              className="justify-start text-foreground"
+                              className={`justify-start ${selectedVoiceType === voiceType.id ? 'bg-blue-600 text-white' : 'bg-white text-black border-gray-300 hover:bg-gray-50'}`}
                               size="sm"
                             >
                               {voiceType.name}
@@ -803,7 +803,7 @@ const JokeApp: React.FC = () => {
 
                        {/* Joke Count for Fully Auto */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-foreground">Number of Jokes (Fully Auto)</label>
+                         <label className="text-sm font-medium mb-2 block text-black">Number of Jokes (Fully Auto)</label>
                         <div className="flex items-center gap-2">
                           <input 
                             type="number" 
@@ -812,22 +812,22 @@ const JokeApp: React.FC = () => {
                             value={fullyAutoJokeCount}
                             onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
                             disabled={isRunningFullyAuto}
-                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-background text-foreground border-border focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
-                          <span className="text-sm text-muted-foreground">jokes</span>
+                          <span className="text-sm text-gray-600">jokes</span>
                         </div>
                       </div>
 
                        {/* Import/Export Jokes */}
                        <div>
-                         <label className="text-sm font-medium mb-2 block text-foreground">Manage Jokes</label>
+                         <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
                         <div className="flex gap-2">
-                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 text-foreground">
+                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
                             <FileDown className="h-4 w-4 mr-2" />
                             Export
                           </Button>
                           <label className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full text-foreground" asChild>
+                            <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50" asChild>
                               <span>
                                 <Upload className="h-4 w-4 mr-2" />
                                 Import
@@ -841,7 +841,7 @@ const JokeApp: React.FC = () => {
                             />
                           </label>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           Export current jokes or import new ones (JSON format)
                         </p>
                       </div>
