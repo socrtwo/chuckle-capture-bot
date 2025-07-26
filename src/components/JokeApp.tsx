@@ -231,6 +231,16 @@ const JokeApp: React.FC = () => {
       return;
     }
 
+    // Check if we've reached the photo limit for this joke
+    if (photosThisJoke >= maxPhotosPerSmileDetection) {
+      console.log('Max photos reached for this joke');
+      setIsDetectingSmile(false);
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+      }
+      return;
+    }
+
     try {
       const detections = await faceapi
         .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
@@ -248,21 +258,27 @@ const JokeApp: React.FC = () => {
           console.log('Smile detected! Taking photo...');
           capturePhoto();
           
-          // Only stop smile detection if NOT in fully auto mode
-          if (mode !== 'fully-auto') {
-            setIsDetectingSmile(false);
-            if (detectionIntervalRef.current) {
-              clearInterval(detectionIntervalRef.current);
+          // Pause smile detection to respect time between photos setting
+          setIsDetectingSmile(false);
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+          }
+          
+          // Resume after the configured delay (unless we've hit the max)
+          setTimeout(() => {
+            if (photosThisJoke + 1 < maxPhotosPerSmileDetection) {
+              console.log('Resuming smile detection after configured delay');
+              setIsDetectingSmile(true);
+              detectionIntervalRef.current = setInterval(detectSmile, 100);
+            } else {
+              console.log('Max photos reached, not resuming smile detection');
             }
+          }, timeBetweenAutoPhotos * 1000);
+          
+          if (mode !== 'fully-auto') {
             toast.success('😊 Smile detected! Photo captured!');
           } else {
-            // In fully auto mode, just show success but keep detecting
             toast.success('😊 Smile detected! Photo captured! Still watching for more smiles...');
-            
-            // Brief pause to avoid rapid consecutive photos of the same smile
-            setTimeout(() => {
-              console.log('Resuming smile detection after brief pause');
-            }, timeBetweenAutoPhotos * 1000);
           }
         }
       } else {
@@ -271,7 +287,7 @@ const JokeApp: React.FC = () => {
     } catch (error) {
       console.error('Error detecting faces:', error);
     }
-  }, [isModelLoaded, capturePhoto]);
+  }, [isModelLoaded, capturePhoto, photosThisJoke, maxPhotosPerSmileDetection, timeBetweenAutoPhotos, mode]);
 
   // Start smile detection
   const startSmileDetection = useCallback((forceCameraActive = false) => {
@@ -289,16 +305,18 @@ const JokeApp: React.FC = () => {
     
     detectionIntervalRef.current = setInterval(detectSmile, 100);
     
-    // Auto-stop detection after 30 seconds
-    setTimeout(() => {
-      if (detectionIntervalRef.current) {
-        clearInterval(detectionIntervalRef.current);
-        setIsDetectingSmile(false);
-        toast.info('Smile detection stopped');
-        console.log('Smile detection auto-stopped after 30s');
-      }
-    }, 30000);
-  }, [detectSmile, isModelLoaded, cameraActive]);
+    // Only auto-stop detection after 30 seconds for non-fully-auto modes
+    if (mode !== 'fully-auto') {
+      setTimeout(() => {
+        if (detectionIntervalRef.current) {
+          clearInterval(detectionIntervalRef.current);
+          setIsDetectingSmile(false);
+          toast.info('Smile detection stopped');
+          console.log('Smile detection auto-stopped after 30s');
+        }
+      }, 30000);
+    }
+  }, [detectSmile, isModelLoaded, cameraActive, mode]);
 
   // Get a new random joke (also triggers auto mode if refresh is clicked)
   const getNewJoke = useCallback(() => {
@@ -373,25 +391,13 @@ const JokeApp: React.FC = () => {
             
             punchlineUtterance.onend = () => {
               console.log('Punchline finished, mode:', mode);
-              // Check current state instead of closure values
-              const currentlyRunningFullyAuto = isRunningFullyAuto;
-              console.log('Current isRunningFullyAuto state:', currentlyRunningFullyAuto);
+              // Don't restart smile detection here - it should already be running
               
-              if (mode === 'auto' || mode === 'semi-auto') {
-                startSmileDetection();
-              } else if (mode === 'fully-auto') {
+              if (mode === 'fully-auto') {
                 // Check if we're still in fully auto mode
                 setIsRunningFullyAuto(prevState => {
                   console.log('Checking fully auto state in onend:', prevState);
                   if (prevState) {
-                    // Start smile detection for fully auto mode too
-                    console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
-                    if (isModelLoaded && cameraActive) {
-                      startSmileDetection();
-                    } else {
-                      console.log('Cannot start smile detection - model or camera not ready');
-                    }
-                    
                     // Continue with next joke in fully auto mode
                     setCurrentFullyAutoJoke(prevJoke => {
                       const nextJokeNumber = prevJoke + 1;
@@ -495,9 +501,14 @@ const JokeApp: React.FC = () => {
       return;
     }
     
+    // Start smile detection immediately
+    if (isModelLoaded) {
+      startSmileDetection();
+    }
+    
     const joke = getNewJoke();
     speakJoke(joke);
-  }, [cameraActive, getNewJoke, speakJoke]);
+  }, [cameraActive, getNewJoke, speakJoke, isModelLoaded, startSmileDetection]);
 
   // Fully Auto mode: Start camera and tell multiple jokes automatically
   const startFullyAutoMode = useCallback(async () => {
