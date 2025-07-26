@@ -349,9 +349,9 @@ const JokeApp: React.FC = () => {
                 const nextJokeNumber = currentFullyAutoJoke + 1;
                 console.log(`Finished joke ${currentFullyAutoJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
                 if (nextJokeNumber < fullyAutoJokeCount) {
-                  setCurrentFullyAutoJoke(nextJokeNumber);
                   toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
                   fullyAutoTimeoutRef.current = setTimeout(() => {
+                    setCurrentFullyAutoJoke(nextJokeNumber);
                     const nextJoke = getNewJoke();
                     console.log(`Starting joke ${nextJokeNumber + 1}: ${nextJoke}`);
                     speakJoke(nextJoke);
@@ -367,31 +367,32 @@ const JokeApp: React.FC = () => {
 
             speechSynthRef.current = punchlineUtterance;
             speechSynthesis.speak(punchlineUtterance);
-          } else {
-            // If no punchline, start smile detection immediately
-            if (mode === 'auto' || mode === 'semi-auto') {
-              startSmileDetection();
-            } else if (mode === 'fully-auto' && isRunningFullyAuto) {
-              // Start smile detection for fully auto mode too
-              if (isModelLoaded && cameraActive) {
+            } else {
+              // If no punchline, start smile detection immediately
+              if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
-              }
-              // Continue with next joke in fully auto mode
-              const nextJokeNumber = currentFullyAutoJoke + 1;
-              if (nextJokeNumber < fullyAutoJokeCount) {
-                setCurrentFullyAutoJoke(nextJokeNumber);
-                fullyAutoTimeoutRef.current = setTimeout(() => {
-                  const nextJoke = getNewJoke();
-                  speakJoke(nextJoke);
-                }, 5000); // 5 second wait
-              } else {
-                // Finished all jokes
-                setIsRunningFullyAuto(false);
-                setCurrentFullyAutoJoke(0);
-                toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+              } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+                // Start smile detection for fully auto mode too
+                if (isModelLoaded && cameraActive) {
+                  startSmileDetection();
+                }
+                // Continue with next joke in fully auto mode
+                const nextJokeNumber = currentFullyAutoJoke + 1;
+                if (nextJokeNumber < fullyAutoJokeCount) {
+                  toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
+                  fullyAutoTimeoutRef.current = setTimeout(() => {
+                    setCurrentFullyAutoJoke(nextJokeNumber);
+                    const nextJoke = getNewJoke();
+                    speakJoke(nextJoke);
+                  }, 5000); // 5 second wait
+                } else {
+                  // Finished all jokes
+                  setIsRunningFullyAuto(false);
+                  setCurrentFullyAutoJoke(0);
+                  toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+                }
               }
             }
-          }
         }, 1500); // 1.5 second pause
       };
 
@@ -409,11 +410,12 @@ const JokeApp: React.FC = () => {
         // Continue with next joke even without speech
         const nextJokeNumber = currentFullyAutoJoke + 1;
         if (nextJokeNumber < fullyAutoJokeCount) {
-          setCurrentFullyAutoJoke(nextJokeNumber);
-            fullyAutoTimeoutRef.current = setTimeout(() => {
-              const nextJoke = getNewJoke();
-              speakJoke(nextJoke);
-            }, 5000);
+          toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
+          fullyAutoTimeoutRef.current = setTimeout(() => {
+            setCurrentFullyAutoJoke(nextJokeNumber);
+            const nextJoke = getNewJoke();
+            speakJoke(nextJoke);
+          }, 5000);
         } else {
           setIsRunningFullyAuto(false);
           setCurrentFullyAutoJoke(0);
@@ -741,14 +743,14 @@ const JokeApp: React.FC = () => {
                       Settings
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-md bg-background text-foreground">
                     <DialogHeader>
-                      <DialogTitle>Settings</DialogTitle>
+                      <DialogTitle className="text-foreground">Settings</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6">
                       {/* Voice Type Selection */}
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Voice Type</label>
+                        <label className="text-sm font-medium mb-2 block text-foreground">Voice Type</label>
                         <div className="grid grid-cols-1 gap-2">
                           {voiceTypes.map((voiceType) => (
                             <Button
@@ -766,7 +768,7 @@ const JokeApp: React.FC = () => {
 
                       {/* Joke Count for Fully Auto */}
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Number of Jokes (Fully Auto)</label>
+                        <label className="text-sm font-medium mb-2 block text-foreground">Number of Jokes (Fully Auto)</label>
                         <div className="flex items-center gap-2">
                           <input 
                             type="number" 
@@ -775,7 +777,7 @@ const JokeApp: React.FC = () => {
                             value={fullyAutoJokeCount}
                             onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
                             disabled={isRunningFullyAuto}
-                            className="flex-1 px-3 py-2 border rounded-md text-sm"
+                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-background text-foreground border-border"
                           />
                           <span className="text-sm text-muted-foreground">jokes</span>
                         </div>
@@ -783,7 +785,7 @@ const JokeApp: React.FC = () => {
 
                       {/* Import/Export Jokes */}
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Manage Jokes</label>
+                        <label className="text-sm font-medium mb-2 block text-foreground">Manage Jokes</label>
                         <div className="flex gap-2">
                           <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1">
                             <FileDown className="h-4 w-4 mr-2" />
