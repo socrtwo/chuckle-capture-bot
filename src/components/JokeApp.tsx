@@ -21,10 +21,10 @@ interface CapturedPhoto {
   dataUrl: string;
   timestamp: Date;
   joke: string;
-  mode: 'auto' | 'semi-auto' | 'manual';
+  mode: 'auto' | 'semi-auto' | 'manual' | 'fully-auto';
 }
 
-type AppMode = 'auto' | 'semi-auto' | 'manual';
+type AppMode = 'auto' | 'semi-auto' | 'manual' | 'fully-auto';
 
 const JokeApp: React.FC = () => {
   const [mode, setMode] = useState<AppMode>('auto');
@@ -37,12 +37,16 @@ const JokeApp: React.FC = () => {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [photosThisJoke, setPhotosThisJoke] = useState(0);
   const [maxPhotosPerJoke] = useState(5);
+  const [fullyAutoJokeCount, setFullyAutoJokeCount] = useState(5);
+  const [isRunningFullyAuto, setIsRunningFullyAuto] = useState(false);
+  const [currentFullyAutoJoke, setCurrentFullyAutoJoke] = useState(0);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const fullyAutoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load face-api models
   useEffect(() => {
@@ -146,9 +150,9 @@ const JokeApp: React.FC = () => {
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
-    // Check photo limit for current joke
-    if (photosThisJoke >= maxPhotosPerJoke) {
-      toast.error(`Maximum ${maxPhotosPerJoke} photos per joke reached! Get a new joke to continue.`);
+    // Check photo limit for current joke (5 photos max)
+    if (photosThisJoke >= 5) {
+      toast.error(`Maximum 5 photos per joke reached! Get a new joke to continue.`);
       setIsDetectingSmile(false);
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
@@ -188,7 +192,7 @@ const JokeApp: React.FC = () => {
       }
 
       // Show photo count update
-      const remaining = maxPhotosPerJoke - (photosThisJoke + 1);
+      const remaining = 5 - (photosThisJoke + 1);
       if (remaining > 0) {
         toast.success(`📸 Photo captured! ${remaining} more allowed for this joke.`);
       } else {
@@ -252,6 +256,33 @@ const JokeApp: React.FC = () => {
     }, 30000);
   }, [detectSmile, isModelLoaded, cameraActive]);
 
+  // Get a new random joke (also triggers auto mode if refresh is clicked)
+  const getNewJoke = useCallback(() => {
+    const joke = getRandomJoke();
+    setCurrentJoke(joke);
+    setPhotosThisJoke(0); // Reset photo counter for new joke
+    return joke;
+  }, []);
+
+  // Stop speech
+  const stopSpeech = useCallback(() => {
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
+  }, []);
+
+  // Stop fully auto mode
+  const stopFullyAutoMode = useCallback(() => {
+    setIsRunningFullyAuto(false);
+    setCurrentFullyAutoJoke(0);
+    if (fullyAutoTimeoutRef.current) {
+      clearTimeout(fullyAutoTimeoutRef.current);
+      fullyAutoTimeoutRef.current = null;
+    }
+    stopSpeech();
+    toast.info('Fully auto mode stopped');
+  }, [stopSpeech]);
+
   // Speak joke using Web Speech API with pause between setup and punchline
   const speakJoke = useCallback((joke: string) => {
     if ('speechSynthesis' in window) {
@@ -299,6 +330,21 @@ const JokeApp: React.FC = () => {
             punchlineUtterance.onend = () => {
               if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
+              } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+                // Continue with next joke in fully auto mode
+                const nextJokeNumber = currentFullyAutoJoke + 1;
+                if (nextJokeNumber < fullyAutoJokeCount) {
+                  setCurrentFullyAutoJoke(nextJokeNumber);
+                  fullyAutoTimeoutRef.current = setTimeout(() => {
+                    const nextJoke = getNewJoke();
+                    speakJoke(nextJoke);
+                  }, 22000); // 22 second wait
+                } else {
+                  // Finished all jokes
+                  setIsRunningFullyAuto(false);
+                  setCurrentFullyAutoJoke(0);
+                  toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+                }
               }
             };
 
@@ -308,6 +354,21 @@ const JokeApp: React.FC = () => {
             // If no punchline, start smile detection immediately
             if (mode === 'auto' || mode === 'semi-auto') {
               startSmileDetection();
+            } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+              // Continue with next joke in fully auto mode
+              const nextJokeNumber = currentFullyAutoJoke + 1;
+              if (nextJokeNumber < fullyAutoJokeCount) {
+                setCurrentFullyAutoJoke(nextJokeNumber);
+                fullyAutoTimeoutRef.current = setTimeout(() => {
+                  const nextJoke = getNewJoke();
+                  speakJoke(nextJoke);
+                }, 22000); // 22 second wait
+              } else {
+                // Finished all jokes
+                setIsRunningFullyAuto(false);
+                setCurrentFullyAutoJoke(0);
+                toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+              }
             }
           }
         }, 1500); // 1.5 second pause
@@ -319,19 +380,37 @@ const JokeApp: React.FC = () => {
       toast.error('Speech synthesis not supported in this browser');
       if (mode === 'auto' || mode === 'semi-auto') {
         startSmileDetection();
+      } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+        // Continue with next joke even without speech
+        const nextJokeNumber = currentFullyAutoJoke + 1;
+        if (nextJokeNumber < fullyAutoJokeCount) {
+          setCurrentFullyAutoJoke(nextJokeNumber);
+          fullyAutoTimeoutRef.current = setTimeout(() => {
+            const nextJoke = getNewJoke();
+            speakJoke(nextJoke);
+          }, 22000);
+        } else {
+          setIsRunningFullyAuto(false);
+          setCurrentFullyAutoJoke(0);
+          toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+        }
       }
     }
-  }, [mode, findMicrosoftDave, startSmileDetection]);
+  }, [mode, findMicrosoftDave, startSmileDetection, isRunningFullyAuto, currentFullyAutoJoke, fullyAutoJokeCount, getNewJoke]);
 
-  // Get a new random joke
-  const getNewJoke = useCallback(() => {
-    const joke = getRandomJoke();
-    setCurrentJoke(joke);
-    setPhotosThisJoke(0); // Reset photo counter for new joke
+  // Enhanced getNewJoke that triggers auto mode if refresh is clicked
+  const getNewJokeWithAutoTrigger = useCallback(() => {
+    const joke = getNewJoke();
+    
+    // If we're in auto mode and camera is active, automatically start the auto sequence
+    if (mode === 'auto' && cameraActive) {
+      speakJoke(joke);
+    }
+    
     return joke;
-  }, []);
+  }, [getNewJoke, mode, cameraActive, speakJoke]);
 
-  // Auto mode: Tell joke and detect smiles
+  // Auto mode: Tell single joke and detect smiles
   const startAutoMode = useCallback(async () => {
     if (!cameraActive) {
       await startCamera();
@@ -340,6 +419,20 @@ const JokeApp: React.FC = () => {
     const joke = getNewJoke();
     speakJoke(joke);
   }, [cameraActive, startCamera, getNewJoke, speakJoke]);
+
+  // Fully Auto mode: Tell multiple jokes automatically
+  const startFullyAutoMode = useCallback(async () => {
+    if (!cameraActive) {
+      await startCamera();
+    }
+    
+    setIsRunningFullyAuto(true);
+    setCurrentFullyAutoJoke(0);
+    toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 22s pauses`);
+    
+    const joke = getNewJoke();
+    speakJoke(joke);
+  }, [cameraActive, startCamera, getNewJoke, speakJoke, fullyAutoJokeCount]);
 
   // Semi-auto mode: Manual joke telling, auto photo
   const startSemiAutoMode = useCallback(async () => {
@@ -375,23 +468,30 @@ const JokeApp: React.FC = () => {
     toast.success('All photos cleared');
   }, []);
 
-  // Stop speech
-  const stopSpeech = useCallback(() => {
+  // Enhanced stop speech
+  const stopSpeechAndAuto = useCallback(() => {
     if ('speechSynthesis' in window) {
       speechSynthesis.cancel();
     }
-  }, []);
+    // Also stop fully auto mode if running
+    if (isRunningFullyAuto) {
+      stopFullyAutoMode();
+    }
+  }, [isRunningFullyAuto, stopFullyAutoMode]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
-      stopSpeech();
+      stopSpeechAndAuto();
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
       }
+      if (fullyAutoTimeoutRef.current) {
+        clearTimeout(fullyAutoTimeoutRef.current);
+      }
     };
-  }, [stopCamera, stopSpeech]);
+  }, [stopCamera, stopSpeechAndAuto]);
 
   return (
     <div className="min-h-screen bg-gradient-background p-4">
@@ -412,7 +512,7 @@ const JokeApp: React.FC = () => {
             <Smile className="h-5 w-5 text-smile" />
             Choose Your Mode
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant={mode === 'auto' ? 'default' : 'outline'}
               onClick={() => setMode('auto')}
@@ -422,9 +522,9 @@ const JokeApp: React.FC = () => {
             >
               <Volume2 className="h-8 w-8" />
               <div className="text-center">
-                <div className="font-semibold">Auto Mode</div>
-                <div className="text-sm opacity-80">
-                  AI tells joke & detects smiles
+                <div className="font-semibold">Single Joke</div>
+                <div className="text-xs opacity-80">
+                  AI tells one joke & detects smiles
                 </div>
               </div>
             </Button>
@@ -442,7 +542,7 @@ const JokeApp: React.FC = () => {
               </div>
               <div className="text-center">
                 <div className="font-semibold">Semi-Auto</div>
-                <div className="text-sm opacity-80">
+                <div className="text-xs opacity-80">
                   You tell joke, AI detects smiles
                 </div>
               </div>
@@ -461,8 +561,27 @@ const JokeApp: React.FC = () => {
               </div>
               <div className="text-center">
                 <div className="font-semibold">Manual Mode</div>
-                <div className="text-sm opacity-80">
+                <div className="text-xs opacity-80">
                   Full manual control
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant={mode === 'fully-auto' ? 'default' : 'outline'}
+              onClick={() => setMode('fully-auto')}
+              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+              }`}
+            >
+              <div className="flex items-center gap-1">
+                <Volume2 className="h-6 w-6" />
+                <Volume2 className="h-6 w-6" />
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">Fully Auto</div>
+                <div className="text-xs opacity-80">
+                  Multiple jokes automatically
                 </div>
               </div>
             </Button>
@@ -523,8 +642,43 @@ const JokeApp: React.FC = () => {
                     className="bg-gradient-fun"
                   >
                     <Volume2 className="h-4 w-4 mr-2" />
-                    Start Auto Mode
+                    Tell One Joke
                   </Button>
+                )}
+
+                {mode === 'fully-auto' && (
+                  <>
+                    {!isRunningFullyAuto ? (
+                      <Button 
+                        onClick={startFullyAutoMode}
+                        disabled={!cameraActive}
+                        className="bg-gradient-fun"
+                      >
+                        <Volume2 className="h-4 w-4 mr-2" />
+                        Start {fullyAutoJokeCount} Jokes
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={stopFullyAutoMode}
+                        variant="outline"
+                      >
+                        Stop Auto Mode ({currentFullyAutoJoke + 1}/{fullyAutoJokeCount})
+                      </Button>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm">Jokes:</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="20" 
+                        value={fullyAutoJokeCount}
+                        onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
+                        disabled={isRunningFullyAuto}
+                        className="w-16 px-2 py-1 border rounded text-sm"
+                      />
+                    </div>
+                  </>
                 )}
 
                 {mode === 'semi-auto' && (
@@ -555,16 +709,16 @@ const JokeApp: React.FC = () => {
                     </Button>
                     <Button 
                       onClick={capturePhoto}
-                      disabled={!cameraActive || photosThisJoke >= maxPhotosPerJoke}
+                      disabled={!cameraActive || photosThisJoke >= 5}
                       variant="outline"
                     >
                       <Camera className="h-4 w-4 mr-2" />
-                      Take Photo {photosThisJoke > 0 && `(${photosThisJoke}/${maxPhotosPerJoke})`}
+                      Take Photo {photosThisJoke > 0 && `(${photosThisJoke}/5)`}
                     </Button>
                   </>
                 )}
 
-                <Button onClick={stopSpeech} variant="outline" size="sm">
+                <Button onClick={stopSpeechAndAuto} variant="outline" size="sm">
                   Stop Speech
                 </Button>
               </div>
@@ -576,7 +730,7 @@ const JokeApp: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               🎭 Current Joke
               <Button 
-                onClick={getNewJoke} 
+                onClick={getNewJokeWithAutoTrigger} 
                 variant="outline" 
                 size="sm"
                 className="ml-auto"
