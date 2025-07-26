@@ -506,88 +506,6 @@ const JokeApp: React.FC = () => {
           </p>
         </div>
 
-        {/* Mode Selection */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Smile className="h-5 w-5 text-smile" />
-            Choose Your Mode
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              variant={mode === 'auto' ? 'default' : 'outline'}
-              onClick={() => setMode('auto')}
-              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
-                mode === 'auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
-              }`}
-            >
-              <Volume2 className="h-8 w-8" />
-              <div className="text-center">
-                <div className="font-semibold">Single Joke</div>
-                <div className="text-xs opacity-80">
-                  AI tells one joke & detects smiles
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={mode === 'semi-auto' ? 'default' : 'outline'}
-              onClick={() => setMode('semi-auto')}
-              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
-                mode === 'semi-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
-              }`}
-            >
-              <div className="flex items-center gap-1">
-                <Mic className="h-6 w-6" />
-                <Camera className="h-6 w-6" />
-              </div>
-              <div className="text-center">
-                <div className="font-semibold">Semi-Auto</div>
-                <div className="text-xs opacity-80">
-                  You tell joke, AI detects smiles
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={mode === 'manual' ? 'default' : 'outline'}
-              onClick={() => setMode('manual')}
-              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
-                mode === 'manual' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
-              }`}
-            >
-              <div className="flex items-center gap-1">
-                <Mic className="h-6 w-6" />
-                <MicOff className="h-6 w-6" />
-              </div>
-              <div className="text-center">
-                <div className="font-semibold">Manual Mode</div>
-                <div className="text-xs opacity-80">
-                  Full manual control
-                </div>
-              </div>
-            </Button>
-
-            <Button
-              variant={mode === 'fully-auto' ? 'default' : 'outline'}
-              onClick={() => setMode('fully-auto')}
-              className={`h-auto p-4 flex flex-col gap-2 transition-all ${
-                mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
-              }`}
-            >
-              <div className="flex items-center gap-1">
-                <Volume2 className="h-6 w-6" />
-                <Volume2 className="h-6 w-6" />
-              </div>
-              <div className="text-center">
-                <div className="font-semibold">Fully Auto</div>
-                <div className="text-xs opacity-80">
-                  Multiple jokes automatically
-                </div>
-              </div>
-            </Button>
-          </div>
-        </Card>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Camera and Controls */}
           <Card className="p-6">
@@ -602,7 +520,7 @@ const JokeApp: React.FC = () => {
             </h2>
             
             <div className="space-y-4">
-              <div className="relative bg-muted rounded-lg overflow-hidden aspect-video">
+              <div className="relative bg-muted rounded-lg overflow-hidden w-1/2 aspect-video">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -725,6 +643,90 @@ const JokeApp: React.FC = () => {
             </div>
           </Card>
 
+          {/* Mode Selection */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Smile className="h-5 w-5 text-smile" />
+              Choose Your Mode
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                variant={mode === 'fully-auto' ? 'default' : 'outline'}
+                onClick={() => setMode('fully-auto')}
+                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                  mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <Volume2 className="h-6 w-6" />
+                  <Volume2 className="h-6 w-6" />
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold">Fully Auto</div>
+                  <div className="text-xs opacity-80">
+                    Multiple jokes automatically
+                  </div>
+                </div>
+              </Button>
+
+              <Button
+                variant={mode === 'auto' ? 'default' : 'outline'}
+                onClick={() => setMode('auto')}
+                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                  mode === 'auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                }`}
+              >
+                <Volume2 className="h-8 w-8" />
+                <div className="text-center">
+                  <div className="font-semibold">Single Joke</div>
+                  <div className="text-xs opacity-80">
+                    AI tells one joke & detects smiles
+                  </div>
+                </div>
+              </Button>
+              
+              <Button
+                variant={mode === 'semi-auto' ? 'default' : 'outline'}
+                onClick={() => setMode('semi-auto')}
+                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                  mode === 'semi-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <Mic className="h-6 w-6" />
+                  <Camera className="h-6 w-6" />
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold">Semi-Auto</div>
+                  <div className="text-xs opacity-80">
+                    You tell joke, AI detects smiles
+                  </div>
+                </div>
+              </Button>
+              
+              <Button
+                variant={mode === 'manual' ? 'default' : 'outline'}
+                onClick={() => setMode('manual')}
+                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                  mode === 'manual' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <Mic className="h-6 w-6" />
+                  <MicOff className="h-6 w-6" />
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold">Manual Mode</div>
+                  <div className="text-xs opacity-80">
+                    Full manual control
+                  </div>
+                </div>
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Current Joke */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
