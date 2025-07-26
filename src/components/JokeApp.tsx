@@ -336,12 +336,12 @@ const JokeApp: React.FC = () => {
                 console.log(`Finished joke ${currentFullyAutoJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
                 if (nextJokeNumber < fullyAutoJokeCount) {
                   setCurrentFullyAutoJoke(nextJokeNumber);
-                  toast.info(`Next joke in 22 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
+                  toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
                   fullyAutoTimeoutRef.current = setTimeout(() => {
                     const nextJoke = getNewJoke();
                     console.log(`Starting joke ${nextJokeNumber + 1}: ${nextJoke}`);
                     speakJoke(nextJoke);
-                  }, 22000); // 22 second wait
+                  }, 5000); // 5 second wait
                 } else {
                   // Finished all jokes
                   setIsRunningFullyAuto(false);
@@ -365,7 +365,7 @@ const JokeApp: React.FC = () => {
                 fullyAutoTimeoutRef.current = setTimeout(() => {
                   const nextJoke = getNewJoke();
                   speakJoke(nextJoke);
-                }, 22000); // 22 second wait
+                }, 5000); // 5 second wait
               } else {
                 // Finished all jokes
                 setIsRunningFullyAuto(false);
@@ -388,10 +388,10 @@ const JokeApp: React.FC = () => {
         const nextJokeNumber = currentFullyAutoJoke + 1;
         if (nextJokeNumber < fullyAutoJokeCount) {
           setCurrentFullyAutoJoke(nextJokeNumber);
-          fullyAutoTimeoutRef.current = setTimeout(() => {
-            const nextJoke = getNewJoke();
-            speakJoke(nextJoke);
-          }, 22000);
+            fullyAutoTimeoutRef.current = setTimeout(() => {
+              const nextJoke = getNewJoke();
+              speakJoke(nextJoke);
+            }, 5000);
         } else {
           setIsRunningFullyAuto(false);
           setCurrentFullyAutoJoke(0);
@@ -438,6 +438,7 @@ const JokeApp: React.FC = () => {
           videoRef.current.srcObject = stream;
           streamRef.current = stream;
           setCameraActive(true);
+          toast.success('Camera activated for fully auto mode!');
         }
       } catch (error) {
         console.error('Error accessing camera:', error);
@@ -449,11 +450,14 @@ const JokeApp: React.FC = () => {
     console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
     setIsRunningFullyAuto(true);
     setCurrentFullyAutoJoke(0);
-    toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 22s pauses`);
+    toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 5s pauses`);
     
-    const joke = getNewJoke();
-    console.log('First joke in fully auto mode:', joke);
-    speakJoke(joke);
+    // Wait for camera to fully initialize before starting first joke
+    setTimeout(() => {
+      const joke = getNewJoke();
+      console.log('First joke in fully auto mode:', joke);
+      speakJoke(joke);
+    }, 1000); // 1 second delay to ensure camera is ready
   }, [cameraActive, getNewJoke, speakJoke, fullyAutoJokeCount]);
 
   // Semi-auto mode: Manual joke telling, auto photo
@@ -684,7 +688,7 @@ const JokeApp: React.FC = () => {
                 className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
                   mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
                 }`}
-                title="Tell multiple jokes automatically with 22s pauses between them"
+                title="Tell multiple jokes automatically with 5s pauses between them"
               >
                 <div className="flex items-center gap-1">
                   <Volume2 className="h-4 w-4" />
@@ -741,27 +745,38 @@ const JokeApp: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Current Joke */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              🎭 Current Joke
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                🎭 Current Joke
+              </h2>
               <Button 
                 onClick={getNewJokeWithAutoTrigger} 
                 variant="outline" 
                 size="sm"
-                className="ml-auto"
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
-            </h2>
+            </div>
             
-              <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
-                {currentJoke ? (
-                  <p className="text-lg leading-relaxed">{currentJoke}</p>
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    Click "Get Joke" to load a joke
-                  </p>
+            <div className="flex gap-4 items-start">
+              <div className="flex-shrink-0 w-32">
+                <div className="text-sm font-medium text-muted-foreground mb-2">Current Joke:</div>
+                {isRunningFullyAuto && (
+                  <div className="text-xs text-muted-foreground">
+                    {currentFullyAutoJoke + 1}/{fullyAutoJokeCount}
+                  </div>
                 )}
+              </div>
+              <div className="flex-1">
+                <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
+                  {currentJoke ? (
+                    <p className="text-lg leading-relaxed">{currentJoke}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">
+                      Click "Get Joke" to load a joke
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
