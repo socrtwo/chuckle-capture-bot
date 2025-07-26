@@ -246,13 +246,16 @@ const JokeApp: React.FC = () => {
 
   // Start smile detection
   const startSmileDetection = useCallback(() => {
+    console.log('startSmileDetection called, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
     if (!isModelLoaded || !cameraActive) {
       toast.error('Camera or face detection not ready');
+      console.log('Cannot start smile detection - requirements not met');
       return;
     }
 
     setIsDetectingSmile(true);
     toast.info('😊 Watching for smiles...');
+    console.log('Smile detection started');
     
     detectionIntervalRef.current = setInterval(detectSmile, 100);
     
@@ -262,6 +265,7 @@ const JokeApp: React.FC = () => {
         clearInterval(detectionIntervalRef.current);
         setIsDetectingSmile(false);
         toast.info('Smile detection stopped');
+        console.log('Smile detection auto-stopped after 30s');
       }
     }, 30000);
   }, [detectSmile, isModelLoaded, cameraActive]);
@@ -338,12 +342,16 @@ const JokeApp: React.FC = () => {
             punchlineUtterance.volume = 0.8;
             
             punchlineUtterance.onend = () => {
+              console.log('Punchline finished, mode:', mode, 'isRunningFullyAuto:', isRunningFullyAuto);
               if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
               } else if (mode === 'fully-auto' && isRunningFullyAuto) {
                 // Start smile detection for fully auto mode too
+                console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
                 if (isModelLoaded && cameraActive) {
                   startSmileDetection();
+                } else {
+                  console.log('Cannot start smile detection - model or camera not ready');
                 }
                 // Continue with next joke in fully auto mode
                 const nextJokeNumber = currentFullyAutoJoke + 1;
