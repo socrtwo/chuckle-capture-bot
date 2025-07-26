@@ -45,6 +45,8 @@ const JokeApp: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [maxPhotosPerSmileDetection, setMaxPhotosPerSmileDetection] = useState(5);
   const [timeBetweenAutoPhotos, setTimeBetweenAutoPhotos] = useState(0.5);
+  const [totalJokesCount, setTotalJokesCount] = useState(0);
+  const [importMode, setImportMode] = useState<'replace' | 'add'>('replace');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,7 +78,7 @@ const JokeApp: React.FC = () => {
     loadModels();
   }, []);
 
-  // Load available voices
+  // Load available voices and get jokes count
   useEffect(() => {
     const loadVoices = () => {
       const voices = speechSynthesis.getVoices();
@@ -85,6 +87,19 @@ const JokeApp: React.FC = () => {
 
     loadVoices();
     speechSynthesis.onvoiceschanged = loadVoices;
+
+    // Load jokes count
+    const loadJokesCount = async () => {
+      try {
+        const jokesModule = await import('@/data/jokes');
+        const jokes = jokesModule.getAllJokes();
+        setTotalJokesCount(jokes.length);
+      } catch (error) {
+        console.error('Error loading jokes count:', error);
+      }
+    };
+
+    loadJokesCount();
   }, []);
 
   // Voice type options
@@ -603,6 +618,25 @@ const JokeApp: React.FC = () => {
     toast.success('All photos cleared');
   }, []);
 
+  // Download template for joke import
+  const downloadTemplate = useCallback(() => {
+    const templateJokes = [
+      "Why don't scientists trust atoms? Because they make up everything!",
+      "What do you call a fake noodle? An impasta!",
+      "Why did the scarecrow win an award? He was outstanding in his field!"
+    ];
+    
+    const dataStr = JSON.stringify(templateJokes, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = 'jokes-template.json';
+    link.click();
+    
+    toast.success('Template downloaded! Edit it and import back.');
+  }, []);
+
   // Export jokes to JSON file
   const exportJokes = useCallback(async () => {
     try {
@@ -637,12 +671,19 @@ const JokeApp: React.FC = () => {
         const importedJokes = JSON.parse(content);
         
         if (Array.isArray(importedJokes) && importedJokes.length > 0) {
-          // Note: In a real app, you'd want to actually update the jokes data
-          // For now, we just show a success message
-          toast.success(`Successfully loaded ${importedJokes.length} jokes! (Note: Restart app to see changes)`);
-          console.log('Imported jokes:', importedJokes);
+          // Validate that all items are strings
+          const validJokes = importedJokes.filter(joke => typeof joke === 'string' && joke.trim().length > 0);
+          
+          if (validJokes.length === 0) {
+            toast.error('No valid jokes found in file');
+            return;
+          }
+
+          const actionText = importMode === 'replace' ? 'replaced with' : 'added';
+          toast.success(`Successfully ${actionText} ${validJokes.length} jokes! (Note: Restart app to see changes)`);
+          console.log(`Import mode: ${importMode}`, 'Imported jokes:', validJokes);
         } else {
-          toast.error('Invalid jokes file format');
+          toast.error('Invalid jokes file format - must be an array of strings');
         }
       } catch (error) {
         console.error('Error importing jokes:', error);
@@ -914,35 +955,71 @@ const JokeApp: React.FC = () => {
                            />
                            <span className="text-sm text-gray-600">seconds</span>
                          </div>
-                       </div>
+                        </div>
 
-                        {/* Import/Export Jokes */}
+                        {/* Total Jokes Count */}
                         <div>
-                          <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
-                         <div className="flex gap-2">
-                           <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
-                             <FileDown className="h-4 w-4 mr-2" />
-                             Export
-                           </Button>
-                           <label className="flex-1">
-                             <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50" asChild>
-                               <span>
-                                 <Upload className="h-4 w-4 mr-2" />
-                                 Import
-                               </span>
-                             </Button>
-                             <input
-                               type="file"
-                               accept=".json"
-                               onChange={importJokes}
-                               className="hidden"
-                             />
-                           </label>
-                         </div>
-                         <p className="text-xs text-gray-600 mt-1">
-                           Export current jokes or import new ones (JSON format)
-                         </p>
-                       </div>
+                          <label className="text-sm font-medium mb-2 block text-black">Jokes Database</label>
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <div className="text-lg font-bold text-center text-black">
+                              {totalJokesCount} Jokes Available
+                            </div>
+                          </div>
+                        </div>
+
+                         {/* Import/Export Jokes */}
+                         <div>
+                           <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
+                           
+                           {/* Import Mode Selection */}
+                           <div className="mb-3">
+                             <label className="text-xs font-medium text-gray-700 mb-1 block">Import Mode:</label>
+                             <div className="flex gap-2">
+                               <Button
+                                 onClick={() => setImportMode('replace')}
+                                 variant={importMode === 'replace' ? 'default' : 'outline'}
+                                 size="sm"
+                                 className="flex-1 text-xs"
+                               >
+                                 Replace All
+                               </Button>
+                               <Button
+                                 onClick={() => setImportMode('add')}
+                                 variant={importMode === 'add' ? 'default' : 'outline'}
+                                 size="sm"
+                                 className="flex-1 text-xs"
+                               >
+                                 Add to Existing
+                               </Button>
+                             </div>
+                           </div>
+
+                          <div className="flex gap-2 mb-2">
+                            <Button onClick={downloadTemplate} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
+                              <Download className="h-4 w-4 mr-2" />
+                              Template
+                            </Button>
+                            <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1 bg-white text-black border-gray-300 hover:bg-gray-50">
+                              <FileDown className="h-4 w-4 mr-2" />
+                              Export
+                            </Button>
+                          </div>
+                          <label className="block">
+                            <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Import ({importMode === 'replace' ? 'Replace' : 'Add'})
+                            </Button>
+                            <input
+                              type="file"
+                              accept=".json"
+                              onChange={importJokes}
+                              className="hidden"
+                            />
+                          </label>
+                          <p className="text-xs text-gray-600 mt-1">
+                            Download template, export current jokes, or import JSON format jokes
+                          </p>
+                        </div>
                        </div>
                     </div>
                   </DialogContent>
