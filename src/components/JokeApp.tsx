@@ -342,34 +342,49 @@ const JokeApp: React.FC = () => {
             punchlineUtterance.volume = 0.8;
             
             punchlineUtterance.onend = () => {
-              console.log('Punchline finished, mode:', mode, 'isRunningFullyAuto:', isRunningFullyAuto);
+              console.log('Punchline finished, mode:', mode);
+              // Check current state instead of closure values
+              const currentlyRunningFullyAuto = isRunningFullyAuto;
+              console.log('Current isRunningFullyAuto state:', currentlyRunningFullyAuto);
+              
               if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
-              } else if (mode === 'fully-auto' && isRunningFullyAuto) {
-                // Start smile detection for fully auto mode too
-                console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
-                if (isModelLoaded && cameraActive) {
-                  startSmileDetection();
-                } else {
-                  console.log('Cannot start smile detection - model or camera not ready');
-                }
-                // Continue with next joke in fully auto mode
-                const nextJokeNumber = currentFullyAutoJoke + 1;
-                console.log(`Finished joke ${currentFullyAutoJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
-                if (nextJokeNumber < fullyAutoJokeCount) {
-                  toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
-                  fullyAutoTimeoutRef.current = setTimeout(() => {
-                    setCurrentFullyAutoJoke(nextJokeNumber);
-                    const nextJoke = getNewJoke();
-                    console.log(`Starting joke ${nextJokeNumber + 1}: ${nextJoke}`);
-                    speakJoke(nextJoke);
-                  }, 5000); // 5 second wait
-                } else {
-                  // Finished all jokes
-                  setIsRunningFullyAuto(false);
-                  setCurrentFullyAutoJoke(0);
-                  toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
-                }
+              } else if (mode === 'fully-auto') {
+                // Check if we're still in fully auto mode
+                setIsRunningFullyAuto(prevState => {
+                  console.log('Checking fully auto state in onend:', prevState);
+                  if (prevState) {
+                    // Start smile detection for fully auto mode too
+                    console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
+                    if (isModelLoaded && cameraActive) {
+                      startSmileDetection();
+                    } else {
+                      console.log('Cannot start smile detection - model or camera not ready');
+                    }
+                    
+                    // Continue with next joke in fully auto mode
+                    setCurrentFullyAutoJoke(prevJoke => {
+                      const nextJokeNumber = prevJoke + 1;
+                      console.log(`Finished joke ${prevJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
+                      if (nextJokeNumber < fullyAutoJokeCount) {
+                        toast.info(`Next joke in 5 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
+                        fullyAutoTimeoutRef.current = setTimeout(() => {
+                          setCurrentFullyAutoJoke(nextJokeNumber);
+                          const nextJoke = getNewJoke();
+                          console.log(`Starting joke ${nextJokeNumber + 1}: ${nextJoke}`);
+                          speakJoke(nextJoke);
+                        }, 5000); // 5 second wait
+                        return nextJokeNumber;
+                      } else {
+                        // Finished all jokes
+                        toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+                        setIsRunningFullyAuto(false);
+                        return 0;
+                      }
+                    });
+                  }
+                  return prevState;
+                });
               }
             };
 
