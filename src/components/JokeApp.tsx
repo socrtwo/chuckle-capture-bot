@@ -333,10 +333,13 @@ const JokeApp: React.FC = () => {
               } else if (mode === 'fully-auto' && isRunningFullyAuto) {
                 // Continue with next joke in fully auto mode
                 const nextJokeNumber = currentFullyAutoJoke + 1;
+                console.log(`Finished joke ${currentFullyAutoJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
                 if (nextJokeNumber < fullyAutoJokeCount) {
                   setCurrentFullyAutoJoke(nextJokeNumber);
+                  toast.info(`Next joke in 22 seconds... (${nextJokeNumber + 1}/${fullyAutoJokeCount})`);
                   fullyAutoTimeoutRef.current = setTimeout(() => {
                     const nextJoke = getNewJoke();
+                    console.log(`Starting joke ${nextJokeNumber + 1}: ${nextJoke}`);
                     speakJoke(nextJoke);
                   }, 22000); // 22 second wait
                 } else {
@@ -413,17 +416,19 @@ const JokeApp: React.FC = () => {
   // Auto mode: Tell single joke and detect smiles
   const startAutoMode = useCallback(async () => {
     if (!cameraActive) {
-      await startCamera();
+      toast.error('Please start the camera first');
+      return;
     }
     
     const joke = getNewJoke();
     speakJoke(joke);
-  }, [cameraActive, startCamera, getNewJoke, speakJoke]);
+  }, [cameraActive, getNewJoke, speakJoke]);
 
   // Fully Auto mode: Tell multiple jokes automatically
   const startFullyAutoMode = useCallback(async () => {
     if (!cameraActive) {
-      await startCamera();
+      toast.error('Please start the camera first');
+      return;
     }
     
     console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
@@ -434,27 +439,29 @@ const JokeApp: React.FC = () => {
     const joke = getNewJoke();
     console.log('First joke in fully auto mode:', joke);
     speakJoke(joke);
-  }, [cameraActive, startCamera, getNewJoke, speakJoke, fullyAutoJokeCount]);
+  }, [cameraActive, getNewJoke, speakJoke, fullyAutoJokeCount]);
 
   // Semi-auto mode: Manual joke telling, auto photo
   const startSemiAutoMode = useCallback(async () => {
     if (!cameraActive) {
-      await startCamera();
+      toast.error('Please start the camera first');
+      return;
     }
     
     getNewJoke();
     toast.info('Tell the joke manually, then click "Start Smile Detection"');
-  }, [cameraActive, startCamera, getNewJoke]);
+  }, [cameraActive, getNewJoke]);
 
   // Manual mode: Everything manual
   const startManualMode = useCallback(async () => {
     if (!cameraActive) {
-      await startCamera();
+      toast.error('Please start the camera first');
+      return;
     }
     
     getNewJoke();
     toast.info('Manual mode: Tell joke and take photo manually');
-  }, [cameraActive, startCamera, getNewJoke]);
+  }, [cameraActive, getNewJoke]);
 
   // Download photo
   const downloadPhoto = useCallback((photo: CapturedPhoto) => {
