@@ -424,11 +424,26 @@ const JokeApp: React.FC = () => {
     speakJoke(joke);
   }, [cameraActive, getNewJoke, speakJoke]);
 
-  // Fully Auto mode: Tell multiple jokes automatically
+  // Fully Auto mode: Start camera and tell multiple jokes automatically
   const startFullyAutoMode = useCallback(async () => {
+    // Start camera if not active
     if (!cameraActive) {
-      toast.error('Please start the camera first');
-      return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: 640, height: 480 },
+          audio: false 
+        });
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          streamRef.current = stream;
+          setCameraActive(true);
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        toast.error('Failed to access camera. Please check permissions.');
+        return;
+      }
     }
     
     console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
@@ -550,16 +565,20 @@ const JokeApp: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {!cameraActive ? (
-                  <Button onClick={startCamera} className="bg-gradient-camera">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Camera
-                  </Button>
-                ) : (
-                  <Button onClick={stopCamera} variant="outline">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Stop Camera
-                  </Button>
+                {mode !== 'fully-auto' && (
+                  <>
+                    {!cameraActive ? (
+                      <Button onClick={startCamera} className="bg-gradient-camera">
+                        <Camera className="h-4 w-4 mr-2" />
+                        Start Camera
+                      </Button>
+                    ) : (
+                      <Button onClick={stopCamera} variant="outline">
+                        <Camera className="h-4 w-4 mr-2" />
+                        Stop Camera
+                      </Button>
+                    )}
+                  </>
                 )}
 
                 {mode === 'auto' && (
@@ -578,11 +597,11 @@ const JokeApp: React.FC = () => {
                     {!isRunningFullyAuto ? (
                       <Button 
                         onClick={startFullyAutoMode}
-                        disabled={!cameraActive}
                         className="bg-gradient-fun"
                       >
+                        <Camera className="h-4 w-4 mr-2" />
                         <Volume2 className="h-4 w-4 mr-2" />
-                        Start {fullyAutoJokeCount} Jokes
+                        Start Camera & {fullyAutoJokeCount} Jokes
                       </Button>
                     ) : (
                       <Button 
@@ -734,17 +753,7 @@ const JokeApp: React.FC = () => {
               </Button>
             </h2>
             
-            <div className="space-y-4">
-              {/* Microsoft Dave Voice Info */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Volume2 className="h-4 w-4" />
-                  Narrator Voice: Microsoft Dave
-                </h3>
-              </div>
-              
-              <Separator />
-              
+              <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
                 {currentJoke ? (
                   <p className="text-lg leading-relaxed">{currentJoke}</p>
@@ -754,16 +763,6 @@ const JokeApp: React.FC = () => {
                   </p>
                 )}
               </div>
-              
-              {currentJoke && mode !== 'manual' && (
-                <Button 
-                  onClick={() => speakJoke(currentJoke)}
-                  className="w-full bg-gradient-fun"
-                >
-                  <Volume2 className="h-4 w-4 mr-2" />
-                  Microsoft Dave Tells Joke
-                </Button>
-              )}
             </div>
           </Card>
         </div>
