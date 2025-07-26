@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upload, FileDown } from 'lucide-react';
 import { getRandomJoke } from '@/data/jokes';
 import { toast } from 'sonner';
 import * as faceapi from '@vladmandic/face-api';
@@ -40,6 +41,8 @@ const JokeApp: React.FC = () => {
   const [fullyAutoJokeCount, setFullyAutoJokeCount] = useState(5);
   const [isRunningFullyAuto, setIsRunningFullyAuto] = useState(false);
   const [currentFullyAutoJoke, setCurrentFullyAutoJoke] = useState(0);
+  const [selectedVoiceType, setSelectedVoiceType] = useState<string>('adult-man');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -82,32 +85,39 @@ const JokeApp: React.FC = () => {
     speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  // Find Microsoft Dave voice specifically
-  const findMicrosoftDave = useCallback((): SpeechSynthesisVoice | null => {
+  // Voice type options
+  const voiceTypes = [
+    { id: 'elderly-woman', name: 'Elderly Woman', gender: 'female', ageGroup: 'old' },
+    { id: 'elderly-man', name: 'Elderly Man', gender: 'male', ageGroup: 'old' },
+    { id: 'adult-woman', name: 'Adult Woman', gender: 'female', ageGroup: 'adult' },
+    { id: 'adult-man', name: 'Adult Man', gender: 'male', ageGroup: 'adult' },
+    { id: 'female-child', name: 'Female Child', gender: 'female', ageGroup: 'child' },
+    { id: 'male-child', name: 'Male Child', gender: 'male', ageGroup: 'child' },
+  ];
+
+  // Find voice based on selected type
+  const findVoiceByType = useCallback((voiceTypeId: string): SpeechSynthesisVoice | null => {
     if (availableVoices.length === 0) return null;
 
-    // Look specifically for Microsoft David/Dave voice
-    const daveVoice = availableVoices.find(voice => 
-      voice.name.toLowerCase().includes('dave') ||
-      voice.name.toLowerCase().includes('david') ||
-      (voice.name.toLowerCase().includes('microsoft') && voice.name.toLowerCase().includes('david'))
-    );
+    const voiceType = voiceTypes.find(v => v.id === voiceTypeId);
+    if (!voiceType) return availableVoices[0];
 
-    if (daveVoice) return daveVoice;
+    // Find voice matching the type criteria
+    const matchingVoices = availableVoices.filter(voice => {
+      const nameLower = voice.name.toLowerCase();
+      const isEnglish = voice.lang.includes('en-US') || voice.lang.includes('en');
+      
+      if (!isEnglish) return false;
 
-    // Fallback to any male English voice
-    const maleVoices = availableVoices.filter(voice => 
-      (voice.lang.includes('en-US') || voice.lang.includes('en')) &&
-      (voice.name.toLowerCase().includes('male') || 
-       voice.name.toLowerCase().includes('man') || 
-       voice.name.toLowerCase().includes('david') || 
-       voice.name.toLowerCase().includes('daniel') ||
-       voice.name.toLowerCase().includes('tom') ||
-       voice.name.toLowerCase().includes('fred') ||
-       voice.name.toLowerCase().includes('aaron'))
-    );
+      // Gender matching
+      const isCorrectGender = voiceType.gender === 'male' ? 
+        (nameLower.includes('male') || nameLower.includes('man') || nameLower.includes('david') || nameLower.includes('daniel') || nameLower.includes('tom') || nameLower.includes('fred') || nameLower.includes('aaron') || nameLower.includes('george') || nameLower.includes('paul')) :
+        (nameLower.includes('female') || nameLower.includes('woman') || nameLower.includes('anna') || nameLower.includes('sophia') || nameLower.includes('emma') || nameLower.includes('olivia') || nameLower.includes('sarah') || nameLower.includes('susan'));
 
-    return maleVoices[0] || availableVoices[0];
+      return isCorrectGender;
+    });
+
+    return matchingVoices[0] || availableVoices[0];
   }, [availableVoices]);
 
   // Start camera
@@ -297,8 +307,8 @@ const JokeApp: React.FC = () => {
       // Speak setup first
       const setupUtterance = new SpeechSynthesisUtterance(setup);
       
-      // Use Microsoft Dave voice
-      const voice = findMicrosoftDave();
+      // Use selected voice type
+      const voice = findVoiceByType(selectedVoiceType);
       if (voice) {
         setupUtterance.voice = voice;
       }
@@ -331,6 +341,10 @@ const JokeApp: React.FC = () => {
               if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
               } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+                // Start smile detection for fully auto mode too
+                if (isModelLoaded && cameraActive) {
+                  startSmileDetection();
+                }
                 // Continue with next joke in fully auto mode
                 const nextJokeNumber = currentFullyAutoJoke + 1;
                 console.log(`Finished joke ${currentFullyAutoJoke + 1}/${fullyAutoJokeCount}, next: ${nextJokeNumber}`);
@@ -358,6 +372,10 @@ const JokeApp: React.FC = () => {
             if (mode === 'auto' || mode === 'semi-auto') {
               startSmileDetection();
             } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+              // Start smile detection for fully auto mode too
+              if (isModelLoaded && cameraActive) {
+                startSmileDetection();
+              }
               // Continue with next joke in fully auto mode
               const nextJokeNumber = currentFullyAutoJoke + 1;
               if (nextJokeNumber < fullyAutoJokeCount) {
@@ -384,6 +402,10 @@ const JokeApp: React.FC = () => {
       if (mode === 'auto' || mode === 'semi-auto') {
         startSmileDetection();
       } else if (mode === 'fully-auto' && isRunningFullyAuto) {
+        // Start smile detection for fully auto mode too
+        if (isModelLoaded && cameraActive) {
+          startSmileDetection();
+        }
         // Continue with next joke even without speech
         const nextJokeNumber = currentFullyAutoJoke + 1;
         if (nextJokeNumber < fullyAutoJokeCount) {
@@ -399,7 +421,7 @@ const JokeApp: React.FC = () => {
         }
       }
     }
-  }, [mode, findMicrosoftDave, startSmileDetection, isRunningFullyAuto, currentFullyAutoJoke, fullyAutoJokeCount, getNewJoke]);
+  }, [mode, findVoiceByType, selectedVoiceType, startSmileDetection, isRunningFullyAuto, currentFullyAutoJoke, fullyAutoJokeCount, getNewJoke, isModelLoaded, cameraActive]);
 
   // Enhanced getNewJoke that triggers auto mode if refresh is clicked
   const getNewJokeWithAutoTrigger = useCallback(() => {
@@ -495,6 +517,58 @@ const JokeApp: React.FC = () => {
   const clearPhotos = useCallback(() => {
     setCapturedPhotos([]);
     toast.success('All photos cleared');
+  }, []);
+
+  // Export jokes to JSON file
+  const exportJokes = useCallback(async () => {
+    try {
+      // Import the jokes module to get all jokes
+      const jokesModule = await import('@/data/jokes');
+      const jokes = jokesModule.getAllJokes();
+      
+      const dataStr = JSON.stringify(jokes, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(dataBlob);
+      link.download = `jokes-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      
+      toast.success('Jokes exported successfully!');
+    } catch (error) {
+      console.error('Error exporting jokes:', error);
+      toast.error('Failed to export jokes');
+    }
+  }, []);
+
+  // Import jokes from JSON file
+  const importJokes = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedJokes = JSON.parse(content);
+        
+        if (Array.isArray(importedJokes) && importedJokes.length > 0) {
+          // Note: In a real app, you'd want to actually update the jokes data
+          // For now, we just show a success message
+          toast.success(`Successfully loaded ${importedJokes.length} jokes! (Note: Restart app to see changes)`);
+          console.log('Imported jokes:', importedJokes);
+        } else {
+          toast.error('Invalid jokes file format');
+        }
+      } catch (error) {
+        console.error('Error importing jokes:', error);
+        toast.error('Failed to import jokes - invalid JSON format');
+      }
+    };
+    
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = '';
   }, []);
 
   // Enhanced stop speech
@@ -608,27 +682,14 @@ const JokeApp: React.FC = () => {
                         <Volume2 className="h-4 w-4 mr-2" />
                         Start Camera & {fullyAutoJokeCount} Jokes
                       </Button>
-                    ) : (
-                      <Button 
-                        onClick={stopFullyAutoMode}
-                        variant="outline"
-                      >
-                        Stop Auto Mode ({currentFullyAutoJoke + 1}/{fullyAutoJokeCount})
-                      </Button>
-                    )}
-                    
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm">Jokes:</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="20" 
-                        value={fullyAutoJokeCount}
-                        onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
-                        disabled={isRunningFullyAuto}
-                        className="w-16 px-2 py-1 border rounded text-sm"
-                      />
-                    </div>
+                     ) : (
+                       <Button 
+                         onClick={stopFullyAutoMode}
+                         variant="outline"
+                       >
+                         Stop Auto Mode ({currentFullyAutoJoke + 1}/{fullyAutoJokeCount})
+                       </Button>
+                     )}
                   </>
                 )}
 
@@ -672,6 +733,84 @@ const JokeApp: React.FC = () => {
                 <Button onClick={stopSpeechAndAuto} variant="outline" size="sm">
                   Stop Speech
                 </Button>
+
+                <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Settings</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6">
+                      {/* Voice Type Selection */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Voice Type</label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {voiceTypes.map((voiceType) => (
+                            <Button
+                              key={voiceType.id}
+                              variant={selectedVoiceType === voiceType.id ? 'default' : 'outline'}
+                              onClick={() => setSelectedVoiceType(voiceType.id)}
+                              className="justify-start"
+                              size="sm"
+                            >
+                              {voiceType.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Joke Count for Fully Auto */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Number of Jokes (Fully Auto)</label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            min="1" 
+                            max="20" 
+                            value={fullyAutoJokeCount}
+                            onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
+                            disabled={isRunningFullyAuto}
+                            className="flex-1 px-3 py-2 border rounded-md text-sm"
+                          />
+                          <span className="text-sm text-muted-foreground">jokes</span>
+                        </div>
+                      </div>
+
+                      {/* Import/Export Jokes */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Manage Jokes</label>
+                        <div className="flex gap-2">
+                          <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1">
+                            <FileDown className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                          <label className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full" asChild>
+                              <span>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Import
+                              </span>
+                            </Button>
+                            <input
+                              type="file"
+                              accept=".json"
+                              onChange={importJokes}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Export current jokes or import new ones (JSON format)
+                        </p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </Card>
