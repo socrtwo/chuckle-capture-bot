@@ -4,10 +4,26 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upload, FileDown } from 'lucide-react';
+import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upload, FileDown, AlertTriangle } from 'lucide-react';
 import { getRandomJoke } from '@/data/jokes';
 import { toast } from 'sonner';
 import * as faceapi from '@vladmandic/face-api';
+
+// Browser compatibility check
+const isBrowserSupported = () => {
+  const isEdgeOnAndroid = /Edge.*Android/i.test(navigator.userAgent);
+  const hasCameraSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const hasSpeechSupport = 'speechSynthesis' in window;
+  
+  return {
+    isSupported: hasCameraSupport && hasSpeechSupport && !isEdgeOnAndroid,
+    issues: {
+      camera: !hasCameraSupport,
+      speech: !hasSpeechSupport,
+      edgeAndroid: isEdgeOnAndroid
+    }
+  };
+};
 
 interface VoiceOption {
   id: string;
@@ -138,11 +154,21 @@ const JokeApp: React.FC = () => {
     return matchingVoices[0] || availableVoices[0];
   }, [availableVoices]);
 
-  // Start camera
+  // Start camera with better mobile compatibility
   const startCamera = useCallback(async () => {
     try {
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error('Camera not supported in this browser. Try Chrome or Firefox.');
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480 },
+        video: { 
+          width: 640, 
+          height: 480,
+          facingMode: 'user'
+        },
         audio: false 
       });
       
@@ -154,7 +180,19 @@ const JokeApp: React.FC = () => {
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
-      toast.error('Failed to access camera. Please check permissions.');
+      let errorMessage = 'Failed to access camera. ';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage += 'Please allow camera permissions and reload.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No camera found.';
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage += 'Camera not supported. Try Chrome or Firefox.';
+      } else {
+        errorMessage += 'Try using Chrome or Firefox browser.';
+      }
+      
+      toast.error(errorMessage);
     }
   }, []);
 
@@ -750,6 +788,32 @@ const JokeApp: React.FC = () => {
             Tell jokes, detect smiles, capture joy!
           </p>
         </div>
+
+        {/* Browser Compatibility Warning */}
+        {(() => {
+          const compatibility = isBrowserSupported();
+          if (!compatibility.isSupported) {
+            return (
+              <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
+                <div className="p-4 flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                      Browser Compatibility Issues Detected
+                    </h3>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      {compatibility.issues.edgeAndroid && "Edge on Android has known issues with camera access. "}
+                      {compatibility.issues.camera && "Camera access not supported. "}
+                      {compatibility.issues.speech && "Speech synthesis not supported. "}
+                      For the best experience, please use <strong>Chrome</strong> or <strong>Firefox</strong> on your device.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            );
+          }
+          return null;
+        })()}
 
         <div className="flex gap-6">
           {/* Camera and Controls */}
