@@ -514,6 +514,12 @@ const JokeApp: React.FC = () => {
     
     toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 5s pauses`);
     
+    // Start smile detection immediately since camera is already active
+    if (isModelLoaded) {
+      console.log('Starting smile detection in fully auto (camera already active)');
+      startSmileDetection();
+    }
+    
     // Start first joke immediately (camera already active)
     const joke = getNewJoke();
     console.log('First joke in fully auto mode:', joke);
