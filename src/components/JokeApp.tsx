@@ -217,7 +217,17 @@ const JokeApp: React.FC = () => {
 
   // Detect smiles in video feed
   const detectSmile = useCallback(async () => {
-    if (!videoRef.current || !isModelLoaded || !cameraActive) return;
+    // Check if video element is ready and playing
+    if (!videoRef.current || !isModelLoaded) {
+      console.log('detectSmile: video or model not ready', { video: !!videoRef.current, model: isModelLoaded });
+      return;
+    }
+
+    // Check if video is actually playing
+    if (videoRef.current.readyState < 2) {
+      console.log('detectSmile: video not ready, readyState:', videoRef.current.readyState);
+      return;
+    }
 
     try {
       const detections = await faceapi
@@ -229,8 +239,11 @@ const JokeApp: React.FC = () => {
         const expressions = detections[0].expressions;
         const happiness = expressions.happy;
         
+        console.log('Smile detection - happiness level:', happiness);
+        
         // Trigger photo if happiness level is above threshold
         if (happiness > 0.6) {
+          console.log('Smile detected! Taking photo...');
           capturePhoto();
           setIsDetectingSmile(false);
           if (detectionIntervalRef.current) {
@@ -238,11 +251,13 @@ const JokeApp: React.FC = () => {
           }
           toast.success('😊 Smile detected! Photo captured!');
         }
+      } else {
+        console.log('No faces detected in frame');
       }
     } catch (error) {
       console.error('Error detecting faces:', error);
     }
-  }, [isModelLoaded, cameraActive, capturePhoto]);
+  }, [isModelLoaded, capturePhoto]);
 
   // Start smile detection
   const startSmileDetection = useCallback((forceCameraActive = false) => {
