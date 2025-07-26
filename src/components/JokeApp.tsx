@@ -426,11 +426,13 @@ const JokeApp: React.FC = () => {
       await startCamera();
     }
     
+    console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
     setIsRunningFullyAuto(true);
     setCurrentFullyAutoJoke(0);
     toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 22s pauses`);
     
     const joke = getNewJoke();
+    console.log('First joke in fully auto mode:', joke);
     speakJoke(joke);
   }, [cameraActive, startCamera, getNewJoke, speakJoke, fullyAutoJokeCount]);
 
@@ -506,9 +508,9 @@ const JokeApp: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex gap-6">
           {/* Camera and Controls */}
-          <Card className="p-6">
+          <Card className="p-6 flex-1">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <Camera className="h-5 w-5 text-camera" />
               Camera Feed
@@ -643,84 +645,68 @@ const JokeApp: React.FC = () => {
             </div>
           </Card>
 
-          {/* Mode Selection */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Smile className="h-5 w-5 text-smile" />
-              Choose Your Mode
+          {/* Mode Selection - Compact version to fit on the right */}
+          <Card className="p-4 w-80">
+            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Smile className="h-4 w-4 text-smile" />
+              Choose Mode
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Button
                 variant={mode === 'fully-auto' ? 'default' : 'outline'}
                 onClick={() => setMode('fully-auto')}
-                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
                   mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
                 }`}
+                title="Tell multiple jokes automatically with 22s pauses between them"
               >
                 <div className="flex items-center gap-1">
-                  <Volume2 className="h-6 w-6" />
-                  <Volume2 className="h-6 w-6" />
+                  <Volume2 className="h-4 w-4" />
+                  <Volume2 className="h-4 w-4" />
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold">Fully Auto</div>
-                  <div className="text-xs opacity-80">
-                    Multiple jokes automatically
-                  </div>
-                </div>
+                <span className="font-medium">Fully Auto</span>
               </Button>
 
               <Button
                 variant={mode === 'auto' ? 'default' : 'outline'}
                 onClick={() => setMode('auto')}
-                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
                   mode === 'auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
                 }`}
+                title="AI tells one joke and automatically detects smiles for photos"
               >
-                <Volume2 className="h-8 w-8" />
-                <div className="text-center">
-                  <div className="font-semibold">Single Joke</div>
-                  <div className="text-xs opacity-80">
-                    AI tells one joke & detects smiles
-                  </div>
-                </div>
+                <Volume2 className="h-5 w-5" />
+                <span className="font-medium">Single Joke</span>
               </Button>
               
               <Button
                 variant={mode === 'semi-auto' ? 'default' : 'outline'}
                 onClick={() => setMode('semi-auto')}
-                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
                   mode === 'semi-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
                 }`}
+                title="You tell the joke manually, AI detects smiles for photos"
               >
                 <div className="flex items-center gap-1">
-                  <Mic className="h-6 w-6" />
-                  <Camera className="h-6 w-6" />
+                  <Mic className="h-4 w-4" />
+                  <Camera className="h-4 w-4" />
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold">Semi-Auto</div>
-                  <div className="text-xs opacity-80">
-                    You tell joke, AI detects smiles
-                  </div>
-                </div>
+                <span className="font-medium">Semi-Auto</span>
               </Button>
               
               <Button
                 variant={mode === 'manual' ? 'default' : 'outline'}
                 onClick={() => setMode('manual')}
-                className={`h-auto p-4 flex flex-col gap-2 transition-all ${
+                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
                   mode === 'manual' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
                 }`}
+                title="Full manual control - tell jokes and take photos manually"
               >
                 <div className="flex items-center gap-1">
-                  <Mic className="h-6 w-6" />
-                  <MicOff className="h-6 w-6" />
+                  <Mic className="h-4 w-4" />
+                  <MicOff className="h-4 w-4" />
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold">Manual Mode</div>
-                  <div className="text-xs opacity-80">
-                    Full manual control
-                  </div>
-                </div>
+                <span className="font-medium">Manual</span>
               </Button>
             </div>
           </Card>
