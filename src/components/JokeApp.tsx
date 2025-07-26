@@ -395,10 +395,9 @@ const JokeApp: React.FC = () => {
               if (mode === 'auto' || mode === 'semi-auto') {
                 startSmileDetection();
               } else if (mode === 'fully-auto' && isRunningFullyAuto) {
-                // Start smile detection for fully auto mode too
-                if (isModelLoaded && cameraActive) {
-                  startSmileDetection();
-                }
+                // Start smile detection for fully auto mode - reuse same logic
+                startSmileDetection();
+                
                 // Continue with next joke in fully auto mode
                 const nextJokeNumber = currentFullyAutoJoke + 1;
                 if (nextJokeNumber < fullyAutoJokeCount) {
@@ -426,10 +425,9 @@ const JokeApp: React.FC = () => {
       if (mode === 'auto' || mode === 'semi-auto') {
         startSmileDetection();
       } else if (mode === 'fully-auto' && isRunningFullyAuto) {
-        // Start smile detection for fully auto mode too
-        if (isModelLoaded && cameraActive) {
-          startSmileDetection();
-        }
+        // Start smile detection for fully auto mode - reuse same logic
+        startSmileDetection();
+        
         // Continue with next joke even without speech
         const nextJokeNumber = currentFullyAutoJoke + 1;
         if (nextJokeNumber < fullyAutoJokeCount) {
@@ -490,6 +488,14 @@ const JokeApp: React.FC = () => {
           streamRef.current = stream;
           setCameraActive(true);
           toast.success('Camera activated for fully auto mode!');
+          
+          // Wait a moment for camera to be ready, then start first joke
+          setTimeout(() => {
+            const joke = getNewJoke();
+            console.log('First joke in fully auto mode:', joke);
+            speakJoke(joke);
+          }, 1000);
+          return;
         }
       } catch (error) {
         console.error('Error accessing camera:', error);
@@ -502,7 +508,7 @@ const JokeApp: React.FC = () => {
     
     toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 5s pauses`);
     
-    // Start first joke immediately (no delay)
+    // Start first joke immediately (camera already active)
     const joke = getNewJoke();
     console.log('First joke in fully auto mode:', joke);
     speakJoke(joke);
@@ -766,14 +772,14 @@ const JokeApp: React.FC = () => {
                       Settings
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md bg-background text-foreground">
-                    <DialogHeader>
-                      <DialogTitle className="text-foreground">Settings</DialogTitle>
-                    </DialogHeader>
+                   <DialogContent className="max-w-md bg-card text-card-foreground border-border">
+                     <DialogHeader>
+                       <DialogTitle className="text-card-foreground">Settings</DialogTitle>
+                     </DialogHeader>
                     <div className="space-y-6">
-                      {/* Voice Type Selection */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block text-foreground">Voice Type</label>
+                       {/* Voice Type Selection */}
+                       <div>
+                         <label className="text-sm font-medium mb-2 block text-card-foreground">Voice Type</label>
                         <div className="grid grid-cols-1 gap-2">
                           {voiceTypes.map((voiceType) => (
                             <Button
@@ -789,9 +795,9 @@ const JokeApp: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Joke Count for Fully Auto */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block text-foreground">Number of Jokes (Fully Auto)</label>
+                       {/* Joke Count for Fully Auto */}
+                       <div>
+                         <label className="text-sm font-medium mb-2 block text-card-foreground">Number of Jokes (Fully Auto)</label>
                         <div className="flex items-center gap-2">
                           <input 
                             type="number" 
@@ -800,15 +806,15 @@ const JokeApp: React.FC = () => {
                             value={fullyAutoJokeCount}
                             onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
                             disabled={isRunningFullyAuto}
-                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-background text-foreground border-border"
+                            className="flex-1 px-3 py-2 border rounded-md text-sm bg-card text-card-foreground border-border"
                           />
                           <span className="text-sm text-muted-foreground">jokes</span>
                         </div>
                       </div>
 
-                      {/* Import/Export Jokes */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block text-foreground">Manage Jokes</label>
+                       {/* Import/Export Jokes */}
+                       <div>
+                         <label className="text-sm font-medium mb-2 block text-card-foreground">Manage Jokes</label>
                         <div className="flex gap-2">
                           <Button onClick={exportJokes} variant="outline" size="sm" className="flex-1">
                             <FileDown className="h-4 w-4 mr-2" />
