@@ -444,10 +444,10 @@ const JokeApp: React.FC = () => {
                     speakJoke(nextJoke);
                   }, 5000); // 5 second wait
                 } else {
-                  // Finished all jokes
+                  // Finished all jokes - keep camera on
                   setIsRunningFullyAuto(false);
                   setCurrentFullyAutoJoke(0);
-                  toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+                  toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode! Camera remains active.`);
                 }
               }
             }
@@ -476,7 +476,7 @@ const JokeApp: React.FC = () => {
         } else {
           setIsRunningFullyAuto(false);
           setCurrentFullyAutoJoke(0);
-          toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode!`);
+          toast.success(`Completed ${fullyAutoJokeCount} jokes in fully auto mode! Camera remains active.`);
         }
       }
     }
@@ -812,6 +812,19 @@ const JokeApp: React.FC = () => {
                       Take Photo {photosThisJoke > 0 && `(${photosThisJoke}/5)`}
                     </Button>
                   </>
+                )}
+
+                {/* Manual Photo Button - Available in all modes */}
+                {cameraActive && (
+                  <Button 
+                    onClick={capturePhoto}
+                    variant="outline"
+                    size="sm"
+                    title="Take photo manually"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Manual Photo
+                  </Button>
                 )}
 
                 <Button onClick={stopSpeechAndAuto} variant="outline" size="sm">
