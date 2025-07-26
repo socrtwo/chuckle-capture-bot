@@ -11,16 +11,18 @@ import * as faceapi from '@vladmandic/face-api';
 
 // Browser compatibility check
 const isBrowserSupported = () => {
-  const isEdgeOnAndroid = /Edge.*Android/i.test(navigator.userAgent);
+  const isOpera = /Opera|OPR/i.test(navigator.userAgent);
+  const isAloha = /Aloha/i.test(navigator.userAgent);
   const hasCameraSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   const hasSpeechSupport = 'speechSynthesis' in window;
   
   return {
-    isSupported: hasCameraSupport && hasSpeechSupport && !isEdgeOnAndroid,
+    isSupported: hasCameraSupport && hasSpeechSupport && !isOpera && !isAloha,
     issues: {
       camera: !hasCameraSupport,
       speech: !hasSpeechSupport,
-      edgeAndroid: isEdgeOnAndroid
+      opera: isOpera,
+      aloha: isAloha
     }
   };
 };
@@ -802,7 +804,8 @@ const JokeApp: React.FC = () => {
                       Browser Compatibility Issues Detected
                     </h3>
                     <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      {compatibility.issues.edgeAndroid && "Edge on Android has known issues with camera access. "}
+                      {compatibility.issues.opera && "Opera browser has known issues with camera access. "}
+                      {compatibility.issues.aloha && "Aloha browser has known issues with camera access. "}
                       {compatibility.issues.camera && "Camera access not supported. "}
                       {compatibility.issues.speech && "Speech synthesis not supported. "}
                       For the best experience, please use <strong>Chrome</strong> or <strong>Firefox</strong> on your device.
