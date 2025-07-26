@@ -34,25 +34,9 @@ const JokeApp: React.FC = () => {
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isDetectingSmile, setIsDetectingSmile] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<VoiceOption>({
-    id: 'female-adult',
-    name: 'Female Adult',
-    gender: 'female',
-    ageGroup: 'adult'
-  });
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [photosThisJoke, setPhotosThisJoke] = useState(0);
   const [maxPhotosPerJoke] = useState(5);
-  
-  // Voice options for American accents
-  const voiceOptions: VoiceOption[] = [
-    { id: 'female-child', name: 'Female Child', gender: 'female', ageGroup: 'child' },
-    { id: 'female-adult', name: 'Female Adult', gender: 'female', ageGroup: 'adult' },
-    { id: 'female-old', name: 'Female Elder', gender: 'female', ageGroup: 'old' },
-    { id: 'male-child', name: 'Male Child', gender: 'male', ageGroup: 'child' },
-    { id: 'male-adult', name: 'Male Adult', gender: 'male', ageGroup: 'adult' },
-    { id: 'male-old', name: 'Male Elder', gender: 'male', ageGroup: 'old' },
-  ];
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -94,55 +78,32 @@ const JokeApp: React.FC = () => {
     speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  // Find best matching voice for selected option
-  const findBestVoice = useCallback((voiceOption: VoiceOption): SpeechSynthesisVoice | null => {
+  // Find Microsoft Dave voice specifically
+  const findMicrosoftDave = useCallback((): SpeechSynthesisVoice | null => {
     if (availableVoices.length === 0) return null;
 
-    // American English voices preferences
-    const americanVoices = availableVoices.filter(voice => 
-      voice.lang.includes('en-US') || voice.lang.includes('en')
+    // Look specifically for Microsoft David/Dave voice
+    const daveVoice = availableVoices.find(voice => 
+      voice.name.toLowerCase().includes('dave') ||
+      voice.name.toLowerCase().includes('david') ||
+      (voice.name.toLowerCase().includes('microsoft') && voice.name.toLowerCase().includes('david'))
     );
 
-    // Voice matching logic based on gender and age
-    let candidates = americanVoices.filter(voice => {
-      const name = voice.name.toLowerCase();
-      
-      if (voiceOption.gender === 'female') {
-        return name.includes('female') || 
-               name.includes('woman') || 
-               name.includes('karen') || 
-               name.includes('samantha') || 
-               name.includes('susan') || 
-               name.includes('sarah') ||
-               name.includes('alex') ||
-               name.includes('allison');
-      } else {
-        return name.includes('male') || 
-               name.includes('man') || 
-               name.includes('daniel') || 
-               name.includes('david') || 
-               name.includes('tom') ||
-               name.includes('fred') ||
-               name.includes('aaron');
-      }
-    });
+    if (daveVoice) return daveVoice;
 
-    // If no gender-specific voices found, use any American voice
-    if (candidates.length === 0) {
-      candidates = americanVoices;
-    }
+    // Fallback to any male English voice
+    const maleVoices = availableVoices.filter(voice => 
+      (voice.lang.includes('en-US') || voice.lang.includes('en')) &&
+      (voice.name.toLowerCase().includes('male') || 
+       voice.name.toLowerCase().includes('man') || 
+       voice.name.toLowerCase().includes('david') || 
+       voice.name.toLowerCase().includes('daniel') ||
+       voice.name.toLowerCase().includes('tom') ||
+       voice.name.toLowerCase().includes('fred') ||
+       voice.name.toLowerCase().includes('aaron'))
+    );
 
-    // Age-specific adjustments (this is approximate since most voices don't specify age)
-    if (voiceOption.ageGroup === 'child') {
-      // Look for higher pitched or voices that might sound younger
-      const childVoices = candidates.filter(voice => 
-        voice.name.toLowerCase().includes('child') ||
-        voice.name.toLowerCase().includes('young')
-      );
-      if (childVoices.length > 0) candidates = childVoices;
-    }
-
-    return candidates[0] || americanVoices[0] || availableVoices[0];
+    return maleVoices[0] || availableVoices[0];
   }, [availableVoices]);
 
   // Start camera
@@ -305,32 +266,19 @@ const JokeApp: React.FC = () => {
       // Speak setup first
       const setupUtterance = new SpeechSynthesisUtterance(setup);
       
-      // Voice-specific settings
-      const voice = findBestVoice(selectedVoice);
+      // Use Microsoft Dave voice
+      const voice = findMicrosoftDave();
       if (voice) {
         setupUtterance.voice = voice;
       }
       
-      // Adjust speech parameters based on age group
-      switch (selectedVoice.ageGroup) {
-        case 'child':
-          setupUtterance.rate = 1.1;
-          setupUtterance.pitch = 1.4;
-          break;
-        case 'adult':
-          setupUtterance.rate = 0.9;
-          setupUtterance.pitch = 1.0;
-          break;
-        case 'old':
-          setupUtterance.rate = 0.7;
-          setupUtterance.pitch = 0.8;
-          break;
-      }
-      
+      // Standard speech parameters for Microsoft Dave
+      setupUtterance.rate = 0.9;
+      setupUtterance.pitch = 1.0;
       setupUtterance.volume = 0.8;
 
       setupUtterance.onstart = () => {
-        toast.info(`🎭 ${selectedVoice.name} telling joke...`);
+        toast.info('🎭 Microsoft Dave telling joke...');
       };
       
       setupUtterance.onend = () => {
@@ -344,21 +292,8 @@ const JokeApp: React.FC = () => {
               punchlineUtterance.voice = voice;
             }
             
-            switch (selectedVoice.ageGroup) {
-              case 'child':
-                punchlineUtterance.rate = 1.1;
-                punchlineUtterance.pitch = 1.4;
-                break;
-              case 'adult':
-                punchlineUtterance.rate = 0.9;
-                punchlineUtterance.pitch = 1.0;
-                break;
-              case 'old':
-                punchlineUtterance.rate = 0.7;
-                punchlineUtterance.pitch = 0.8;
-                break;
-            }
-            
+            punchlineUtterance.rate = 0.9;
+            punchlineUtterance.pitch = 1.0;
             punchlineUtterance.volume = 0.8;
             
             punchlineUtterance.onend = () => {
@@ -386,7 +321,7 @@ const JokeApp: React.FC = () => {
         startSmileDetection();
       }
     }
-  }, [mode, selectedVoice, findBestVoice, startSmileDetection]);
+  }, [mode, findMicrosoftDave, startSmileDetection]);
 
   // Get a new random joke
   const getNewJoke = useCallback(() => {
@@ -651,29 +586,12 @@ const JokeApp: React.FC = () => {
             </h2>
             
             <div className="space-y-4">
-              {/* Voice Selection */}
+              {/* Microsoft Dave Voice Info */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium flex items-center gap-2">
                   <Volume2 className="h-4 w-4" />
-                  Narrator Voice
+                  Narrator Voice: Microsoft Dave
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {voiceOptions.map((voice) => (
-                    <Button
-                      key={voice.id}
-                      variant={selectedVoice.id === voice.id ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSelectedVoice(voice)}
-                      className={`text-xs h-8 ${
-                        selectedVoice.id === voice.id 
-                          ? 'bg-gradient-fun text-white' 
-                          : 'hover:bg-muted'
-                      }`}
-                    >
-                      {voice.name}
-                    </Button>
-                  ))}
-                </div>
               </div>
               
               <Separator />
@@ -694,7 +612,7 @@ const JokeApp: React.FC = () => {
                   className="w-full bg-gradient-fun"
                 >
                   <Volume2 className="h-4 w-4 mr-2" />
-                  {selectedVoice.name} Tells Joke
+                  Microsoft Dave Tells Joke
                 </Button>
               )}
             </div>
