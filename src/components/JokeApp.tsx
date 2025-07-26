@@ -743,43 +743,44 @@ const JokeApp: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Current Joke */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                🎭 Current Joke
-              </h2>
-              <Button 
-                onClick={getNewJokeWithAutoTrigger} 
-                variant="outline" 
-                size="sm"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 w-32">
-                <div className="text-sm font-medium text-muted-foreground mb-2">Current Joke:</div>
+          {/* Current Joke Section */}
+          <div className="flex gap-6">
+            {/* Joke Label Card */}
+            <Card className="p-6 w-64">
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  🎭 Current Joke
+                </h2>
                 {isRunningFullyAuto && (
-                  <div className="text-xs text-muted-foreground">
-                    {currentFullyAutoJoke + 1}/{fullyAutoJokeCount}
+                  <div className="text-sm text-muted-foreground">
+                    Progress: {currentFullyAutoJoke + 1}/{fullyAutoJokeCount}
                   </div>
                 )}
+                <Button 
+                  onClick={getNewJokeWithAutoTrigger} 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  New Joke
+                </Button>
               </div>
-              <div className="flex-1">
-                <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
-                  {currentJoke ? (
-                    <p className="text-lg leading-relaxed">{currentJoke}</p>
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      Click "Get Joke" to load a joke
-                    </p>
-                  )}
-                </div>
+            </Card>
+
+            {/* Joke Content Card */}
+            <Card className="p-6 flex-1">
+              <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
+                {currentJoke ? (
+                  <p className="text-lg leading-relaxed">{currentJoke}</p>
+                ) : (
+                  <p className="text-muted-foreground italic">
+                    Click "Get Joke" to load a joke
+                  </p>
+                )}
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Captured Photos */}
