@@ -426,6 +426,10 @@ const JokeApp: React.FC = () => {
 
   // Fully Auto mode: Start camera and tell multiple jokes automatically
   const startFullyAutoMode = useCallback(async () => {
+    console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
+    setIsRunningFullyAuto(true);
+    setCurrentFullyAutoJoke(0);
+    
     // Start camera if not active
     if (!cameraActive) {
       try {
@@ -443,21 +447,18 @@ const JokeApp: React.FC = () => {
       } catch (error) {
         console.error('Error accessing camera:', error);
         toast.error('Failed to access camera. Please check permissions.');
+        setIsRunningFullyAuto(false);
+        setCurrentFullyAutoJoke(0);
         return;
       }
     }
     
-    console.log('Starting fully auto mode with', fullyAutoJokeCount, 'jokes');
-    setIsRunningFullyAuto(true);
-    setCurrentFullyAutoJoke(0);
     toast.success(`Starting fully auto mode: ${fullyAutoJokeCount} jokes with 5s pauses`);
     
-    // Wait for camera to fully initialize before starting first joke
-    setTimeout(() => {
-      const joke = getNewJoke();
-      console.log('First joke in fully auto mode:', joke);
-      speakJoke(joke);
-    }, 1000); // 1 second delay to ensure camera is ready
+    // Start first joke immediately (no delay)
+    const joke = getNewJoke();
+    console.log('First joke in fully auto mode:', joke);
+    speakJoke(joke);
   }, [cameraActive, getNewJoke, speakJoke, fullyAutoJokeCount]);
 
   // Semi-auto mode: Manual joke telling, auto photo
