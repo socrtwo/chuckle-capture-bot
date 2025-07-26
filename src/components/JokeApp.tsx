@@ -245,9 +245,10 @@ const JokeApp: React.FC = () => {
   }, [isModelLoaded, cameraActive, capturePhoto]);
 
   // Start smile detection
-  const startSmileDetection = useCallback(() => {
-    console.log('startSmileDetection called, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraActive);
-    if (!isModelLoaded || !cameraActive) {
+  const startSmileDetection = useCallback((forceCameraActive = false) => {
+    const cameraReady = forceCameraActive || cameraActive;
+    console.log('startSmileDetection called, isModelLoaded:', isModelLoaded, 'cameraActive:', cameraReady);
+    if (!isModelLoaded || !cameraReady) {
       toast.error('Camera or face detection not ready');
       console.log('Cannot start smile detection - requirements not met');
       return;
@@ -498,7 +499,7 @@ const JokeApp: React.FC = () => {
             // Start smile detection immediately for fully auto mode
             console.log('Starting smile detection in fully auto, isModelLoaded:', isModelLoaded, 'cameraActive:', true);
             if (isModelLoaded) {
-              startSmileDetection();
+              startSmileDetection(true); // Force camera active since we just activated it
             }
           }, 1000);
           return;
@@ -517,7 +518,7 @@ const JokeApp: React.FC = () => {
     // Start smile detection immediately since camera is already active
     if (isModelLoaded) {
       console.log('Starting smile detection in fully auto (camera already active)');
-      startSmileDetection();
+      startSmileDetection(true); // Force camera active
     }
     
     // Start first joke immediately (camera already active)
@@ -746,7 +747,7 @@ const JokeApp: React.FC = () => {
                       Get Joke
                     </Button>
                     <Button 
-                      onClick={startSmileDetection}
+                      onClick={() => startSmileDetection()}
                       disabled={!cameraActive || !isModelLoaded || isDetectingSmile}
                       variant="outline"
                     >
