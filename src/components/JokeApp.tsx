@@ -73,6 +73,7 @@ const JokeApp: React.FC = () => {
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const fullyAutoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load face-api models
   useEffect(() => {
@@ -716,6 +717,11 @@ const JokeApp: React.FC = () => {
     }
   }, []);
 
+  // Trigger file input dialog
+  const triggerFileImport = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   // Import jokes from JSON file
   const importJokes = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1088,18 +1094,22 @@ const JokeApp: React.FC = () => {
                               Export
                             </Button>
                           </div>
-                          <label className="block">
-                            <Button variant="outline" size="sm" className="w-full bg-white text-black border-gray-300 hover:bg-gray-50">
-                              <Upload className="h-4 w-4 mr-2" />
-                              Import ({importMode === 'replace' ? 'Replace' : 'Add'})
-                            </Button>
-                            <input
-                              type="file"
-                              accept=".json"
-                              onChange={importJokes}
-                              className="hidden"
-                            />
-                          </label>
+                          <Button 
+                            onClick={triggerFileImport}
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full bg-white text-black border-gray-300 hover:bg-gray-50"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Import ({importMode === 'replace' ? 'Replace' : 'Add'})
+                          </Button>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".json"
+                            onChange={importJokes}
+                            className="hidden"
+                          />
                           <p className="text-xs text-gray-600 mt-1">
                             Download template, export current jokes, or import JSON format jokes
                           </p>
