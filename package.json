@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "AI-powered comedy photo booth - tells jokes, detects smiles, captures photos",
+  "author": {
+    "name": "Smile Camera Team",
+    "email": "dev@smilecamera.app"
+  },
+  "homepage": "https://github.com/socrtwo/chuckle-capture-bot",
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
