@@ -1,5 +1,10 @@
 # Welcome to your Lovable project
 
+<!--PAGES_LINK_BANNER-->
+> 🌐 **Live page:** [https://socrtwo.github.io/chuckle-capture-bot/](https://socrtwo.github.io/chuckle-capture-bot/)  
+> 📦 **Releases:** [github.com/socrtwo/chuckle-capture-bot/releases](https://github.com/socrtwo/chuckle-capture-bot/releases)
+<!--/PAGES_LINK_BANNER-->
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/05f113fa-5be3-48a3-adac-42f2964649ea
