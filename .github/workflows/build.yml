@@ -1,0 +1,232 @@
+name: Build chuckle-capture-bot – All Platforms
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+  APP_SLUG: chuckle-capture-bot
+
+# Allow the release job to create/update GitHub Releases.
+permissions:
+  contents: write
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. Web / PWA bundles.
+  #
+  # This is a Vite/React web app with a Capacitor mobile shell (no
+  # Electron). Platform coverage:
+  #   • Web      – PWA bundle (open in any browser).
+  #   • ChromeOS – PWA bundle (install from Chrome, or sideload the APK).
+  #   • iOS      – PWA bundle (Safari → Add to Home Screen). A signed
+  #                .ipa needs Apple certs, so native iOS is verify-only.
+  #   • Windows/macOS/Linux – desktop PWA bundle ("Install app" in the
+  #                browser). Native desktop OMITTED (no Electron config).
+  #   • Android  – NATIVE debug APK via Capacitor (job 2).
+  # ─────────────────────────────────────────────
+  build-web:
+    name: Build Web (PWA bundles)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (non-blocking)
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build
+
+      - name: Package PWA bundles (Web / ChromeOS / iOS / Desktop)
+        run: |
+          SLUG="${APP_SLUG}"
+          ( cd dist && zip -r "../${SLUG}-web.zip" . )
+
+          printf '%s for ChromeOS\n\nOpen the live app in Chrome and use\n"Install %s" from the address bar, or sideload the Android APK.\n' "$SLUG" "$SLUG" > INSTALL-chromeos.txt
+          cp "${SLUG}-web.zip" "${SLUG}-chromeos.zip" && zip -j "${SLUG}-chromeos.zip" INSTALL-chromeos.txt
+
+          printf '%s for iOS / iPadOS\n\nOpen the live app in Safari, then\nShare -> Add to Home Screen to install (PWA).\n' "$SLUG" > INSTALL-ios.txt
+          cp "${SLUG}-web.zip" "${SLUG}-ios.zip" && zip -j "${SLUG}-ios.zip" INSTALL-ios.txt
+
+          printf '%s for Windows / macOS / Linux\n\nOpen the live app in Chrome/Edge and use the\n"Install app" button in the address bar (desktop PWA),\nor unzip and serve these files locally.\n' "$SLUG" > INSTALL-desktop.txt
+          cp "${SLUG}-web.zip" "${SLUG}-desktop.zip" && zip -j "${SLUG}-desktop.zip" INSTALL-desktop.txt
+
+      - name: Upload PWA bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_SLUG }}-pwa-bundles
+          path: |
+            ${{ env.APP_SLUG }}-web.zip
+            ${{ env.APP_SLUG }}-chromeos.zip
+            ${{ env.APP_SLUG }}-ios.zip
+            ${{ env.APP_SLUG }}-desktop.zip
+          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
+
+  # ─────────────────────────────────────────────
+  # 2. Android (Capacitor) – native debug APK.
+  # ─────────────────────────────────────────────
+  build-android:
+    name: Build Android (Capacitor)
+    needs: build-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Add Capacitor Android platform (if not already present)
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build Android debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          mkdir -p release-mobile
+          cp android/app/build/outputs/apk/debug/app-debug.apk "release-mobile/${APP_SLUG}-android-debug.apk"
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_SLUG }}-android
+          path: release-mobile/${{ env.APP_SLUG }}-android-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  # ─────────────────────────────────────────────
+  # 3. iOS (Capacitor) – simulator build verification only.
+  #    A distributable .ipa requires Apple signing certs, so this leg
+  #    only verifies the project compiles and never blocks release.
+  #    Installable iOS coverage is the PWA bundle from job 1.
+  # ─────────────────────────────────────────────
+  build-ios:
+    name: Build iOS (Capacitor – verify)
+    needs: build-web
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Add Capacitor iOS platform (if not already present)
+        run: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install
+
+      - name: Build iOS (simulator – no signing required)
+        run: |
+          SIM_ID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for devices in data['devices'].values():
+              for d in devices:
+                  if 'iPhone' in d['name'] and d['isAvailable']:
+                      print(d['udid'])
+                      sys.exit(0)
+          sys.exit(1)
+          ")
+          echo "Using simulator: $SIM_ID"
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIM_ID" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+  # ─────────────────────────────────────────────
+  # 4. Create GitHub Release (on v* tags or manual dispatch).
+  #    iOS is intentionally excluded from needs (no signed .ipa).
+  # ─────────────────────────────────────────────
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    needs: [build-web, build-android]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: List downloaded artifacts
+        run: find artifacts -type f | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.apk
+          generate_release_notes: true
+          fail_on_unmatched_files: false
