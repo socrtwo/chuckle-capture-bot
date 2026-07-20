@@ -1,0 +1,3 @@
+# This folder will contain face-api.js models
+# Note: In a production environment, you would need to copy the face-api.js models here
+# For now, we'll handle the missing models gracefully in the component
