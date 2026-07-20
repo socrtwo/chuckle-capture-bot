@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.05f113fa5be348a3adac42f2964649ea',
+  appId: 'app.lovable.chucklecapture',
   appName: 'chuckle-capture-bot',
   webDir: 'dist',
   server: {
