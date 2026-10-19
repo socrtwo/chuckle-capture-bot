@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.smilecamera.app",
+  "productName": "Joke & Smile Camera",
+  "copyright": "Copyright © 2024",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "public/icons/**/*"
+  ],
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "category": "public.app-category.entertainment",
+    "icon": "public/icons/icon-512x512.png",
+    "hardenedRuntime": true,
+    "entitlements": "build/entitlements.mac.plist",
+    "extendInfo": {
+      "NSCameraUsageDescription": "This app needs camera access to capture smile photos",
+      "NSMicrophoneUsageDescription": "This app needs microphone access for speech features"
+    }
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/icons/icon-512x512.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "public/icons/icon-512x512.png",
+    "uninstallerIcon": "public/icons/icon-512x512.png",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Smile Camera"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64", "arm64", "armv7l"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64", "arm64", "armv7l"]
+      },
+      {
+        "target": "rpm",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/icons",
+    "category": "Utility;AudioVideo;",
+    "synopsis": "AI-powered comedy photo booth",
+    "description": "Tell jokes, detect smiles, capture the moment. Features AI-powered smile detection and automatic photo capture.",
+    "desktop": {
+      "StartupWMClass": "smile-camera"
+    }
+  }
+}

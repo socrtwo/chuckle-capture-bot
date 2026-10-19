@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upload, FileDown, AlertTriangle } from 'lucide-react';
+import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upload, FileDown, AlertTriangle, Zap, Play, Hand, Sparkles, CircleDot } from 'lucide-react';
 import { getRandomJoke } from '@/data/jokes';
 import { toast } from 'sonner';
 import * as faceapi from '@vladmandic/face-api';
@@ -785,27 +785,33 @@ const JokeApp: React.FC = () => {
   }, [stopCamera, stopSpeechAndAuto]);
 
   return (
-    <div className="min-h-screen bg-gradient-background p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-fun bg-clip-text text-transparent">
-            🎭 Joke & Smile Camera
+        <header className="text-center space-y-3 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            AI-Powered Comedy Photo Booth
+          </div>
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight gradient-text-animated">
+            Joke & Smile Camera
           </h1>
-          <p className="text-muted-foreground">
-            Tell jokes, detect smiles, capture joy!
+          <p className="text-muted-foreground text-lg max-w-md mx-auto">
+            Tell jokes, detect smiles, capture the moment.
           </p>
-        </div>
+        </header>
 
         {/* Browser Compatibility Warning */}
         {(() => {
           const compatibility = isBrowserSupported();
           if (!compatibility.isSupported) {
             return (
-              <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
+              <Card className="glass-card border-yellow-300/50 dark:border-yellow-700/50 animate-fade-in">
                 <div className="p-4 flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                  <div className="space-y-2">
+                  <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div className="space-y-1">
                     <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
                       Browser Compatibility Issues Detected
                     </h3>
@@ -814,7 +820,7 @@ const JokeApp: React.FC = () => {
                       {compatibility.issues.aloha && "Aloha browser has known issues with camera access. "}
                       {compatibility.issues.camera && "Camera access not supported. "}
                       {compatibility.issues.speech && "Speech synthesis not supported. "}
-                      For the best experience, please use <strong>Chrome</strong> or <strong>Firefox</strong> on your device.
+                      For the best experience, please use <strong>Chrome</strong> or <strong>Firefox</strong>.
                     </p>
                   </div>
                 </div>
@@ -824,50 +830,63 @@ const JokeApp: React.FC = () => {
           return null;
         })()}
 
-        <div className="flex gap-6">
+        {/* Main Layout: Camera + Mode Selection */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 animate-fade-in">
           {/* Camera and Controls */}
-          <Card className="p-6 flex-1">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Camera className="h-5 w-5 text-camera" />
-              Camera Feed
+          <Card className="glass-card overflow-hidden">
+            <div className="p-5 pb-4 flex items-center justify-between border-b border-border/50">
+              <h2 className="text-lg font-semibold flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-camera/10">
+                  <Camera className="h-4 w-4 text-camera" />
+                </div>
+                Camera Feed
+              </h2>
               {isDetectingSmile && (
-                <Badge variant="secondary" className="animate-pulse">
+                <Badge variant="secondary" className="animate-pulse bg-camera/10 text-camera border-camera/20">
+                  <CircleDot className="h-3 w-3 mr-1.5" />
                   Detecting Smiles
                 </Badge>
               )}
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="relative bg-muted rounded-lg overflow-hidden w-1/2 aspect-video">
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Video Feed */}
+              <div className="relative rounded-xl overflow-hidden bg-muted/50 aspect-video viewfinder viewfinder-bottom shadow-medium">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-[filter] duration-150"
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                
+
                 {!cameraActive && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                    <div className="text-center space-y-2">
-                      <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
-                      <p className="text-muted-foreground">Camera not active</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/90 to-muted">
+                    <div className="text-center space-y-3">
+                      <div className="mx-auto w-16 h-16 rounded-2xl bg-muted-foreground/10 flex items-center justify-center">
+                        <Camera className="h-8 w-8 text-muted-foreground/60" />
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-medium">Camera not active</p>
+                        <p className="text-muted-foreground/60 text-sm">Start the camera to begin</p>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
+              {/* Controls */}
               <div className="flex flex-wrap gap-2">
                 {mode !== 'fully-auto' && (
                   <>
                     {!cameraActive ? (
-                      <Button onClick={startCamera} className="bg-gradient-camera">
+                      <Button onClick={startCamera} className="bg-gradient-camera text-white shadow-md hover:shadow-lg transition-shadow">
                         <Camera className="h-4 w-4 mr-2" />
                         Start Camera
                       </Button>
                     ) : (
-                      <Button onClick={stopCamera} variant="outline">
+                      <Button onClick={stopCamera} variant="outline" className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors">
                         <Camera className="h-4 w-4 mr-2" />
                         Stop Camera
                       </Button>
@@ -876,10 +895,10 @@ const JokeApp: React.FC = () => {
                 )}
 
                 {mode === 'auto' && (
-                  <Button 
+                  <Button
                     onClick={startAutoMode}
                     disabled={!cameraActive || !isModelLoaded}
-                    className="bg-gradient-fun"
+                    className="bg-gradient-fun text-white shadow-md hover:shadow-lg transition-shadow"
                   >
                     <Volume2 className="h-4 w-4 mr-2" />
                     Tell One Joke
@@ -889,18 +908,18 @@ const JokeApp: React.FC = () => {
                 {mode === 'fully-auto' && (
                   <>
                     {!isRunningFullyAuto ? (
-                      <Button 
+                      <Button
                         onClick={startFullyAutoMode}
-                        className="bg-gradient-fun"
+                        className="bg-gradient-fun text-white shadow-md hover:shadow-lg transition-shadow"
                       >
-                        <Camera className="h-4 w-4 mr-2" />
-                        <Volume2 className="h-4 w-4 mr-2" />
+                        <Zap className="h-4 w-4 mr-2" />
                         Start Camera & {fullyAutoJokeCount} Jokes
                       </Button>
                      ) : (
-                       <Button 
+                       <Button
                          onClick={stopFullyAutoMode}
                          variant="outline"
+                         className="border-destructive/30 text-destructive hover:bg-destructive/10"
                        >
                          Stop Auto Mode ({currentFullyAutoJoke + 1}/{fullyAutoJokeCount})
                        </Button>
@@ -910,14 +929,15 @@ const JokeApp: React.FC = () => {
 
                 {mode === 'semi-auto' && (
                   <>
-                    <Button 
+                    <Button
                       onClick={startSemiAutoMode}
                       disabled={!cameraActive}
+                      className="bg-gradient-fun text-white shadow-md hover:shadow-lg transition-shadow"
                     >
                       <Mic className="h-4 w-4 mr-2" />
                       Get Joke
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => startSmileDetection()}
                       disabled={!cameraActive || !isModelLoaded || isDetectingSmile}
                       variant="outline"
@@ -930,11 +950,11 @@ const JokeApp: React.FC = () => {
 
                 {mode === 'manual' && (
                   <>
-                    <Button onClick={startManualMode}>
+                    <Button onClick={startManualMode} className="bg-gradient-fun text-white shadow-md hover:shadow-lg transition-shadow">
                       <Mic className="h-4 w-4 mr-2" />
                       Get Joke
                     </Button>
-                    <Button 
+                    <Button
                       onClick={capturePhoto}
                       disabled={!cameraActive || photosThisJoke >= 5}
                       variant="outline"
@@ -945,13 +965,15 @@ const JokeApp: React.FC = () => {
                   </>
                 )}
 
-                {/* Manual Photo Button - Available in all modes */}
+                <Separator orientation="vertical" className="h-9 mx-1" />
+
                 {cameraActive && (
-                  <Button 
+                  <Button
                     onClick={capturePhoto}
                     variant="outline"
                     size="sm"
                     title="Take photo manually"
+                    className="hover:bg-camera/10 hover:text-camera hover:border-camera/30 transition-colors"
                   >
                     <Camera className="h-4 w-4 mr-2" />
                     Manual Photo
@@ -959,12 +981,13 @@ const JokeApp: React.FC = () => {
                 )}
 
                 <Button onClick={stopSpeechAndAuto} variant="outline" size="sm">
+                  <MicOff className="h-4 w-4 mr-2" />
                   Stop Speech
                 </Button>
 
                 <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
                     </Button>
@@ -976,7 +999,6 @@ const JokeApp: React.FC = () => {
                     <div className="grid grid-cols-2 gap-8">
                        {/* Left Column */}
                        <div className="space-y-6">
-                        {/* Voice Type Selection */}
                         <div>
                           <label className="text-sm font-medium mb-2 block text-black">Voice Type</label>
                          <div className="grid grid-cols-1 gap-2">
@@ -994,14 +1016,13 @@ const JokeApp: React.FC = () => {
                          </div>
                        </div>
 
-                        {/* Joke Count for Fully Auto */}
                         <div>
                           <label className="text-sm font-medium mb-2 block text-black">Number of Jokes (Fully Auto)</label>
                          <div className="flex items-center gap-2">
-                           <input 
-                             type="number" 
-                             min="1" 
-                             max="20" 
+                           <input
+                             type="number"
+                             min="1"
+                             max="20"
                              value={fullyAutoJokeCount}
                              onChange={(e) => setFullyAutoJokeCount(Number(e.target.value))}
                              disabled={isRunningFullyAuto}
@@ -1014,14 +1035,13 @@ const JokeApp: React.FC = () => {
 
                        {/* Right Column */}
                        <div className="space-y-6">
-                       {/* Max Photos Per Smile Detection */}
                        <div>
                          <label className="text-sm font-medium mb-2 block text-black">Max Photos per Smile Detection</label>
                          <div className="flex items-center gap-2">
-                           <input 
-                             type="number" 
-                             min="1" 
-                             max="20" 
+                           <input
+                             type="number"
+                             min="1"
+                             max="20"
                              value={maxPhotosPerSmileDetection}
                              onChange={(e) => setMaxPhotosPerSmileDetection(Number(e.target.value))}
                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1030,14 +1050,13 @@ const JokeApp: React.FC = () => {
                          </div>
                        </div>
 
-                       {/* Time Between Auto Photos */}
                        <div>
                          <label className="text-sm font-medium mb-2 block text-black">Time Between Auto Photos</label>
                          <div className="flex items-center gap-2">
-                           <input 
-                             type="number" 
-                             min="0.1" 
-                             max="10" 
+                           <input
+                             type="number"
+                             min="0.1"
+                             max="10"
                              step="0.1"
                              value={timeBetweenAutoPhotos}
                              onChange={(e) => setTimeBetweenAutoPhotos(Number(e.target.value))}
@@ -1047,7 +1066,6 @@ const JokeApp: React.FC = () => {
                          </div>
                         </div>
 
-                        {/* Total Jokes Count */}
                         <div>
                           <label className="text-sm font-medium mb-2 block text-black">Jokes Database</label>
                           <div className="bg-gray-50 p-3 rounded-md">
@@ -1057,11 +1075,9 @@ const JokeApp: React.FC = () => {
                           </div>
                         </div>
 
-                         {/* Import/Export Jokes */}
                          <div>
                            <label className="text-sm font-medium mb-2 block text-black">Manage Jokes</label>
-                           
-                           {/* Import Mode Selection */}
+
                            <div className="mb-3">
                              <label className="text-xs font-medium text-gray-700 mb-1 block">Import Mode:</label>
                              <div className="flex gap-2">
@@ -1094,10 +1110,10 @@ const JokeApp: React.FC = () => {
                               Export
                             </Button>
                           </div>
-                          <Button 
+                          <Button
                             onClick={triggerFileImport}
-                            variant="outline" 
-                            size="sm" 
+                            variant="outline"
+                            size="sm"
                             className="w-full bg-white text-black border-gray-300 hover:bg-gray-50"
                           >
                             <Upload className="h-4 w-4 mr-2" />
@@ -1122,185 +1138,238 @@ const JokeApp: React.FC = () => {
             </div>
           </Card>
 
-          {/* Mode Selection - Compact version to fit on the right */}
-          <Card className="p-4 w-80">
-            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Smile className="h-4 w-4 text-smile" />
-              Choose Mode
-            </h2>
-            <div className="space-y-2">
-              <Button
-                variant={mode === 'fully-auto' ? 'default' : 'outline'}
+          {/* Mode Selection */}
+          <Card className="glass-card animate-slide-in-right h-fit">
+            <div className="p-5 pb-4 border-b border-border/50">
+              <h2 className="text-lg font-semibold flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-smile/10">
+                  <Smile className="h-4 w-4 text-smile" />
+                </div>
+                Choose Mode
+              </h2>
+            </div>
+            <div className="p-4 space-y-2">
+              {/* Fully Auto */}
+              <button
                 onClick={() => setMode('fully-auto')}
-                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
-                  mode === 'fully-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border ${
+                  mode === 'fully-auto'
+                    ? 'bg-gradient-fun text-white border-transparent shadow-md ring-2 ring-primary/20'
+                    : 'bg-card hover:bg-muted/50 border-border/50 hover:border-border'
                 }`}
-                title="Tell multiple jokes automatically with 5s pauses between them"
               >
-                <div className="flex items-center gap-1">
-                  <Volume2 className="h-4 w-4" />
-                  <Volume2 className="h-4 w-4" />
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${mode === 'fully-auto' ? 'bg-white/20' : 'bg-joy/10'}`}>
+                    <Zap className={`h-4 w-4 ${mode === 'fully-auto' ? 'text-white' : 'text-joy'}`} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">Fully Auto</div>
+                    <div className={`text-xs ${mode === 'fully-auto' ? 'text-white/75' : 'text-muted-foreground'}`}>
+                      Multiple jokes, auto capture
+                    </div>
+                  </div>
                 </div>
-                <span className="font-medium">Fully Auto</span>
-              </Button>
+              </button>
 
-              <Button
-                variant={mode === 'auto' ? 'default' : 'outline'}
+              {/* Single Joke */}
+              <button
                 onClick={() => setMode('auto')}
-                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
-                  mode === 'auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border ${
+                  mode === 'auto'
+                    ? 'bg-gradient-fun text-white border-transparent shadow-md ring-2 ring-primary/20'
+                    : 'bg-card hover:bg-muted/50 border-border/50 hover:border-border'
                 }`}
-                title="AI tells one joke and automatically detects smiles for photos"
               >
-                <Volume2 className="h-5 w-5" />
-                <span className="font-medium">Single Joke</span>
-              </Button>
-              
-              <Button
-                variant={mode === 'semi-auto' ? 'default' : 'outline'}
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${mode === 'auto' ? 'bg-white/20' : 'bg-laugh/10'}`}>
+                    <Play className={`h-4 w-4 ${mode === 'auto' ? 'text-white' : 'text-laugh'}`} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">Single Joke</div>
+                    <div className={`text-xs ${mode === 'auto' ? 'text-white/75' : 'text-muted-foreground'}`}>
+                      One joke, auto smile detect
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Semi-Auto */}
+              <button
                 onClick={() => setMode('semi-auto')}
-                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
-                  mode === 'semi-auto' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border ${
+                  mode === 'semi-auto'
+                    ? 'bg-gradient-fun text-white border-transparent shadow-md ring-2 ring-primary/20'
+                    : 'bg-card hover:bg-muted/50 border-border/50 hover:border-border'
                 }`}
-                title="You tell the joke manually, AI detects smiles for photos"
               >
-                <div className="flex items-center gap-1">
-                  <Mic className="h-4 w-4" />
-                  <Camera className="h-4 w-4" />
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${mode === 'semi-auto' ? 'bg-white/20' : 'bg-camera/10'}`}>
+                    <Mic className={`h-4 w-4 ${mode === 'semi-auto' ? 'text-white' : 'text-camera'}`} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">Semi-Auto</div>
+                    <div className={`text-xs ${mode === 'semi-auto' ? 'text-white/75' : 'text-muted-foreground'}`}>
+                      You tell joke, auto capture
+                    </div>
+                  </div>
                 </div>
-                <span className="font-medium">Semi-Auto</span>
-              </Button>
-              
-              <Button
-                variant={mode === 'manual' ? 'default' : 'outline'}
+              </button>
+
+              {/* Manual */}
+              <button
                 onClick={() => setMode('manual')}
-                className={`w-full h-auto p-3 flex items-center gap-2 justify-start transition-all ${
-                  mode === 'manual' ? 'ring-2 ring-primary ring-offset-2 bg-gradient-fun text-white' : 'hover:bg-muted'
+                className={`w-full text-left rounded-xl p-3.5 transition-all duration-200 border ${
+                  mode === 'manual'
+                    ? 'bg-gradient-fun text-white border-transparent shadow-md ring-2 ring-primary/20'
+                    : 'bg-card hover:bg-muted/50 border-border/50 hover:border-border'
                 }`}
-                title="Full manual control - tell jokes and take photos manually"
               >
-                <div className="flex items-center gap-1">
-                  <Mic className="h-4 w-4" />
-                  <MicOff className="h-4 w-4" />
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${mode === 'manual' ? 'bg-white/20' : 'bg-primary/10'}`}>
+                    <Hand className={`h-4 w-4 ${mode === 'manual' ? 'text-white' : 'text-primary'}`} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">Manual</div>
+                    <div className={`text-xs ${mode === 'manual' ? 'text-white/75' : 'text-muted-foreground'}`}>
+                      Full control over everything
+                    </div>
+                  </div>
                 </div>
-                <span className="font-medium">Manual</span>
-              </Button>
+              </button>
             </div>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Current Joke Section */}
-          <div className="flex gap-6">
-            {/* Joke Label Card */}
-            <Card className="p-6 w-64">
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  🎭 Current Joke
-                </h2>
-                {isRunningFullyAuto && (
-                  <div className="text-sm text-muted-foreground">
-                    Progress: {currentFullyAutoJoke + 1}/{fullyAutoJokeCount}
-                  </div>
-                )}
-                <Button 
-                  onClick={getNewJokeWithAutoTrigger} 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  New Joke
-                </Button>
+        {/* Current Joke Section */}
+        <Card className="glass-card overflow-hidden animate-fade-in">
+          <div className="p-5 pb-4 flex items-center justify-between border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-joy/10">
+                <Volume2 className="h-4 w-4 text-joy" />
               </div>
-            </Card>
-
-            {/* Joke Content Card */}
-            <Card className="p-6 flex-1">
-              <div className="p-4 bg-muted rounded-lg min-h-[120px] flex items-center">
-                {currentJoke ? (
-                  <p className="text-lg leading-relaxed whitespace-pre-wrap break-words">{currentJoke}</p>
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    Click "Get Joke" to load a joke
-                  </p>
-                )}
-              </div>
-            </Card>
+              <h2 className="text-lg font-semibold">Current Joke</h2>
+              {isRunningFullyAuto && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 ml-2">
+                  {currentFullyAutoJoke + 1} / {fullyAutoJokeCount}
+                </Badge>
+              )}
+            </div>
+            <Button
+              onClick={getNewJokeWithAutoTrigger}
+              variant="outline"
+              size="sm"
+              className="hover:bg-joy/10 hover:text-joy hover:border-joy/30 transition-colors"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              New Joke
+            </Button>
           </div>
-        </div>
+          <div className="p-5">
+            <div className="p-6 bg-gradient-subtle rounded-xl min-h-[100px] flex items-center border border-border/30">
+              {currentJoke ? (
+                <p className="text-lg leading-relaxed whitespace-pre-wrap break-words">{currentJoke}</p>
+              ) : (
+                <p className="text-muted-foreground italic text-center w-full">
+                  Click "New Joke" or use a mode button to load a joke
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
 
         {/* Captured Photos */}
         {capturedPhotos.length > 0 && (
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                📸 Captured Photos ({capturedPhotos.length})
-              </h2>
-              <Button onClick={clearPhotos} variant="outline" size="sm">
+          <Card className="glass-card overflow-hidden animate-fade-in">
+            <div className="p-5 pb-4 flex items-center justify-between border-b border-border/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-camera/10">
+                  <Camera className="h-4 w-4 text-camera" />
+                </div>
+                <h2 className="text-lg font-semibold">Captured Photos</h2>
+                <Badge variant="secondary" className="ml-1">{capturedPhotos.length}</Badge>
+              </div>
+              <Button onClick={clearPhotos} variant="outline" size="sm" className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors">
                 Clear All
               </Button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {capturedPhotos.map((photo) => (
-                <div key={photo.id} className="space-y-2">
-                  <div className="relative group overflow-hidden rounded-lg">
-                    <img 
-                      src={photo.dataUrl} 
-                      alt="Captured smile"
-                      className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button 
-                        onClick={() => downloadPhoto(photo)}
-                        size="sm"
-                        className="bg-white/20 hover:bg-white/30"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+
+            <div className="p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {capturedPhotos.map((photo) => (
+                  <div key={photo.id} className="group rounded-xl overflow-hidden border border-border/50 bg-card shadow-subtle hover:shadow-medium transition-all duration-300 animate-scale-in">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={photo.dataUrl}
+                        alt="Captured smile"
+                        className="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                        <Button
+                          onClick={() => downloadPhoto(photo)}
+                          size="sm"
+                          className="bg-white/90 text-foreground hover:bg-white shadow-lg"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="p-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {photo.mode}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {photo.timestamp.toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-snug">
+                        {photo.joke}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {photo.mode}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {photo.timestamp.toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {photo.joke}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </Card>
         )}
 
-        {/* Status and Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isModelLoaded ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">Face Detection: {isModelLoaded ? 'Ready' : 'Loading...'}</span>
+        {/* Status Indicators */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
+          <Card className="glass-card p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${isModelLoaded ? 'bg-green-500 status-dot status-dot-green' : 'bg-red-400'}`} />
+              <div>
+                <div className="text-sm font-medium">Face Detection</div>
+                <div className={`text-xs ${isModelLoaded ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                  {isModelLoaded ? 'Ready' : 'Loading models...'}
+                </div>
+              </div>
             </div>
           </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-green-500' : 'bg-gray-500'}`} />
-              <span className="text-sm">Camera: {cameraActive ? 'Active' : 'Inactive'}</span>
+
+          <Card className="glass-card p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${cameraActive ? 'bg-green-500 status-dot status-dot-green' : 'bg-gray-400'}`} />
+              <div>
+                <div className="text-sm font-medium">Camera</div>
+                <div className={`text-xs ${cameraActive ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                  {cameraActive ? 'Active' : 'Inactive'}
+                </div>
+              </div>
             </div>
           </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isDetectingSmile ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'}`} />
-              <span className="text-sm">Smile Detection: {isDetectingSmile ? 'Active' : 'Inactive'}</span>
+
+          <Card className="glass-card p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${isDetectingSmile ? 'bg-blue-500 status-dot status-dot-blue' : 'bg-gray-400'}`} />
+              <div>
+                <div className="text-sm font-medium">Smile Detection</div>
+                <div className={`text-xs ${isDetectingSmile ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
+                  {isDetectingSmile ? 'Actively scanning' : 'Inactive'}
+                </div>
+              </div>
             </div>
           </Card>
         </div>
