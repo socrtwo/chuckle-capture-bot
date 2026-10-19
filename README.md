@@ -2,6 +2,11 @@
 
 An AI-powered comedy photo booth that tells jokes using text-to-speech, detects smiles in real-time with face detection AI, and automatically captures photos when people laugh.
 
+<!--PAGES_LINK_BANNER-->
+> 🌐 **Live page:** [https://socrtwo.github.io/chuckle-capture-bot/](https://socrtwo.github.io/chuckle-capture-bot/)
+> 📦 **Releases:** [github.com/socrtwo/chuckle-capture-bot/releases](https://github.com/socrtwo/chuckle-capture-bot/releases)
+<!--/PAGES_LINK_BANNER-->
+
 ## Features
 
 - **AI Smile Detection** - Real-time face expression analysis using TinyFaceDetector
