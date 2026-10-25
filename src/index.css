@@ -293,3 +293,20 @@ All colors MUST be HSL.
     opacity: 0;
   }
 }
+
+/* Honour the OS reduced-motion preference: stop the continuous gradient /
+   ping loops, collapse entrance transitions, and disable smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

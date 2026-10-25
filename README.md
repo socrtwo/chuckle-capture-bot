@@ -99,10 +99,11 @@ Outputs to `release/`:
 
 ### Android
 
-**Prerequisites:** Android Studio, Android SDK (API 33+), Java 17+
+**Prerequisites:** Android Studio, Android SDK (API 33+), JDK 21 (Capacitor 7's `capacitor-android` targets Java 21)
 
 ```bash
-# First time only - add Android platform
+# First time only - add Android platform (also declares the camera permission
+# in android/app/src/main/AndroidManifest.xml)
 npm run cap:init:android
 
 # Build web assets and sync to Android project
@@ -117,12 +118,15 @@ npm run cap:android:run
 
 To create a release APK, in Android Studio: Build > Generate Signed Bundle/APK.
 
+The generated `android/` project is git-ignored. The WebView only prompts for the camera when `android.permission.CAMERA` is declared in `AndroidManifest.xml`, so `cap:init:android` and `cap:android` run `scripts/cap-native-permissions.js` to add it. Re-run `npm run cap:permissions` whenever you regenerate the project by hand with `npx cap add android`.
+
 ### iOS (iPhone / iPad)
 
 **Prerequisites:** macOS, Xcode 15+, Apple Developer account, CocoaPods
 
 ```bash
-# First time only - add iOS platform
+# First time only - add iOS platform (also adds NSCameraUsageDescription
+# to ios/App/App/Info.plist)
 npm run cap:init:ios
 cd ios/App && pod install && cd ../..
 
@@ -137,6 +141,8 @@ npm run cap:ios:run
 ```
 
 To create a release: In Xcode, select your team under Signing & Capabilities, then Product > Archive.
+
+The generated `ios/` project is git-ignored. iOS refuses `getUserMedia` unless `Info.plist` contains `NSCameraUsageDescription`, so `cap:init:ios` and `cap:ios` run `scripts/cap-native-permissions.js` to add it (the `NSCameraUsageDescription` in `electron-builder.json` only applies to the macOS Electron build). Re-run `npm run cap:permissions` whenever you regenerate the project by hand with `npx cap add ios`.
 
 ### All Desktop Platforms at Once
 
@@ -154,6 +160,8 @@ npm run dev
 npm run electron:dev
 ```
 
+`electron:dev` passes `--dev` to `electron/main.cjs` (works in cmd.exe, PowerShell and POSIX shells alike). In production the window only loads the bundled `dist/` files; navigation elsewhere is blocked, links open in the system browser, and camera/microphone permission is granted only to the bundled app.
+
 ## PWA (Progressive Web App)
 
 The app is also a PWA that can be installed directly from the browser without building native apps:
@@ -165,7 +173,7 @@ The app is also a PWA that can be installed directly from the browser without bu
    - **Chrome (Android):** Menu > "Add to Home Screen"
    - **Safari (iOS):** Share > "Add to Home Screen"
 
-The PWA works offline after first load.
+The PWA works offline after first load: the service worker precaches the app shell, the hashed build assets (list injected into `dist/sw.js` at build time by `vite.config.ts`) and the face-detection model files, all resolved relative to the deployment directory so sub-path hosting such as GitHub Pages works.
 
 ## All Build Commands
 
@@ -184,6 +192,7 @@ The PWA works offline after first load.
 | `npm run cap:android:open` | Open Android Studio |
 | `npm run cap:ios` | Build & sync iOS |
 | `npm run cap:ios:open` | Open Xcode |
+| `npm run cap:permissions` | Re-apply native camera permission declarations to `android/` and `ios/` |
 | `npm run generate:icons` | Generate app icons |
 
 ## Platform Summary
@@ -213,6 +222,7 @@ src/
   App.tsx                # Router + providers
   main.tsx               # Entry point + PWA registration
   index.css              # Design system (CSS variables, glass morphism)
+  lib/models.ts          # Face-api model URLs (shared with the service worker)
 electron/
   main.cjs               # Electron main process
   preload.cjs            # Electron preload script
@@ -223,6 +233,7 @@ public/
   models/                # Face detection ML models
 scripts/
   generate-icons.js      # Icon generation utility
+  cap-native-permissions.js  # Adds camera permission to generated Android/iOS projects
 ```
 
 ## License

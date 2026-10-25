@@ -122,6 +122,9 @@ jobs:
             npx cap add android
           fi
 
+      - name: Declare native camera permission (AndroidManifest.xml)
+        run: node scripts/cap-native-permissions.js android
+
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -171,6 +174,9 @@ jobs:
           if [ ! -d "ios" ]; then
             npx cap add ios
           fi
+
+      - name: Declare native camera permission (Info.plist)
+        run: node scripts/cap-native-permissions.js ios
 
       - name: Sync Capacitor
         run: npx cap sync ios

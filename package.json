@@ -16,27 +16,24 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-
-    "electron:dev": "ELECTRON_DEV=true electron electron/main.cjs",
+    "electron:dev": "electron electron/main.cjs --dev",
     "electron:build": "vite build && electron-builder",
-
     "electron:win": "vite build && electron-builder --win",
     "electron:mac": "vite build && electron-builder --mac",
     "electron:linux": "vite build && electron-builder --linux",
     "electron:linux-arm": "vite build && electron-builder --linux --arm64 --armv7l",
     "electron:all": "vite build && electron-builder --win --mac --linux",
-
     "cap:build": "vite build",
-    "cap:android": "vite build && npx cap sync android",
+    "cap:android": "vite build && npx cap sync android && node scripts/cap-native-permissions.js android",
     "cap:android:open": "npx cap open android",
     "cap:android:run": "npx cap run android",
-    "cap:ios": "vite build && npx cap sync ios",
+    "cap:ios": "vite build && npx cap sync ios && node scripts/cap-native-permissions.js ios",
     "cap:ios:open": "npx cap open ios",
     "cap:ios:run": "npx cap run ios",
-    "cap:init:android": "npx cap add android",
-    "cap:init:ios": "npx cap add ios",
-
-    "generate:icons": "node scripts/generate-icons.js"
+    "cap:init:android": "npx cap add android && node scripts/cap-native-permissions.js android",
+    "cap:init:ios": "npx cap add ios && node scripts/cap-native-permissions.js ios",
+    "generate:icons": "node scripts/generate-icons.js",
+    "cap:permissions": "node scripts/cap-native-permissions.js"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",

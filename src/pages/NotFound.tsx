@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
 const NotFound = () => {
@@ -18,12 +18,12 @@ const NotFound = () => {
         <p className="text-xl text-muted-foreground">
           Oops! This page doesn't exist.
         </p>
-        <a
-          href="/"
+        <Link
+          to="/"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
         >
           Return to Home
-        </a>
+        </Link>
       </div>
     </div>
   );

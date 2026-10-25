@@ -8,6 +8,7 @@ import { Camera, Mic, MicOff, Smile, Download, RotateCcw, Volume2, Settings, Upl
 import { getRandomJoke } from '@/data/jokes';
 import { toast } from 'sonner';
 import * as faceapi from '@vladmandic/face-api';
+import { MODEL_BASE_URL } from '@/lib/models';
 
 // Browser compatibility check
 const isBrowserSupported = () => {
@@ -79,11 +80,11 @@ const JokeApp: React.FC = () => {
   useEffect(() => {
     const loadModels = async () => {
       try {
-        // Try to load models from CDN instead of local files
+        // Load models from the CDN (the service worker precaches them for offline use)
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model'),
-          faceapi.nets.faceExpressionNet.loadFromUri('https://raw.githubusercontent.com/vladmandic/face-api/master/model')
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_BASE_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_BASE_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_BASE_URL)
         ]);
         setIsModelLoaded(true);
         toast.success('Face detection models loaded!');
@@ -1307,7 +1308,7 @@ const JokeApp: React.FC = () => {
                         <Button
                           onClick={() => downloadPhoto(photo)}
                           size="sm"
-                          className="bg-white/90 text-foreground hover:bg-white shadow-lg"
+                          className="bg-white/90 text-zinc-900 hover:bg-white hover:text-zinc-900 shadow-lg"
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Download

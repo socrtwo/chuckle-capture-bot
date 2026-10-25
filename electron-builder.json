@@ -48,8 +48,6 @@
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
-    "installerIcon": "public/icons/icon-512x512.png",
-    "uninstallerIcon": "public/icons/icon-512x512.png",
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Smile Camera"
