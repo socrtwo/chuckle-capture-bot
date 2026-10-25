@@ -109,6 +109,12 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default package list is "tools platform-tools"; the
+          # legacy "tools" package no longer exists in the SDK repository
+          # and makes sdkmanager fail. The runner image already carries the
+          # platforms/build-tools; only platform-tools is needed here.
+          packages: platform-tools
 
       - name: Install dependencies
         run: npm ci
@@ -121,6 +127,9 @@ jobs:
           if [ ! -d "android" ]; then
             npx cap add android
           fi
+
+      - name: Declare native camera permission (AndroidManifest.xml)
+        run: node scripts/cap-native-permissions.js android
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -171,6 +180,9 @@ jobs:
           if [ ! -d "ios" ]; then
             npx cap add ios
           fi
+
+      - name: Declare native camera permission (Info.plist)
+        run: node scripts/cap-native-permissions.js ios
 
       - name: Sync Capacitor
         run: npx cap sync ios

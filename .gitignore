@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Electron build output
+release/
+
+# Capacitor native platforms (generated)
+android/
+ios/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
